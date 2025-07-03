@@ -14,6 +14,17 @@ const OtherDataItem = ({title, return_data}) => {
   )
 };
 
+ const SideUpBar = () => {
+  const [open, setOpen] = useState(false);
+  return(
+    <div className={`bottom-sheet ${open ? 'open' : ''}`}>
+      <button className='toggle-buttom' onClick={() => setOpen(!open)}>
+        {open? '關閉控制台' : '開啟控制台'}
+      </button>
+    </div>
+  )
+ }
+
 const App = () => {
   return (
     <>
@@ -33,6 +44,7 @@ const App = () => {
         <OtherDataItem title = '456' return_data = ' ' />
         <OtherDataItem title = '789' return_data = ' ' />
       </div>
+      <SideUpBar/>
     </>
   );
 }
