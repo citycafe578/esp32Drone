@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import './App.css'
 
 const Card = ({title}) => {
   const [hasLiked, setHasLiked] = useState(false)
@@ -19,12 +20,13 @@ const Card = ({title}) => {
 
 const App = () => {
   return (
-    <div>
-      <h1>Hello World</h1>
-      <Card title = "1"/>
-      <Card title = "2"/>
-      <Card title = "3"/>
-      <Card title = "4"/>
+    <div id='digital_display'>
+      <div id='stream' className='digital_item'>
+        
+      </div>
+      <div id='map' className='digital_item'>
+        
+      </div>
     </div>
   );
 };
