@@ -27,7 +27,7 @@ const OtherDataItem = ({title, return_data}) => {
 
 const App = () => {
   return (
-    <>
+    <div id="app-wrapper" style={{display: 'flex', flexDirection: 'column',height: '100vh'}}>
       <div id='digital_display'>
         <div id='stream' className='digital_item'>
           <h1>stream</h1>
@@ -44,8 +44,11 @@ const App = () => {
         <OtherDataItem title = '456' return_data = ' ' />
         <OtherDataItem title = '789' return_data = ' ' />
       </div>
-      <SideUpBar/>
-    </>
+
+      <div id="slide_up_bar_div" style={{flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+          <SideUpBar/>
+      </div>
+    </div>
   );
 }
 
