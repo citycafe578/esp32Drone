@@ -14,16 +14,19 @@ const OtherDataItem = ({title, return_data}) => {
   )
 };
 
- const SideUpBar = () => {
+const SideUpBar = () => {
   const [open, setOpen] = useState(false);
-  return(
+  return (
     <div className={`bottom-sheet ${open ? 'open' : ''}`}>
-      <button className='toggle-buttom' onClick={() => setOpen(!open)}>
-        {open? '關閉控制台' : '開啟控制台'}
-      </button>
+      <div className="drag-handle" onClick={() => setOpen(!open)}>
+        <div className="handle-bar" />
+      </div>
+      <div className="sheet-content">
+        <h1>ababab</h1>
+      </div>
     </div>
-  )
- }
+  );
+};
 
 const App = () => {
   return (
@@ -44,10 +47,9 @@ const App = () => {
         <OtherDataItem title = '456' return_data = ' ' />
         <OtherDataItem title = '789' return_data = ' ' />
       </div>
-
-      <div id="slide_up_bar_div" style={{flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-          <SideUpBar/>
-      </div>
+      
+      <SideUpBar/>
+      
     </div>
   );
 }
