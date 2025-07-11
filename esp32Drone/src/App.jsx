@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 import SideUpBar from './components/SideUpBar/SideUpBar.jsx';
+import MapComponent from './components/MapComponent/MapComponent.jsx';
 
 const OtherDataItem = ({title, return_data}) => {
   return(
@@ -23,7 +24,7 @@ const App = () => {
           <h1>stream</h1>
         </div>
         <div id='map' className='digital_item'>
-          <h1>map</h1>
+          <MapComponent />
         </div>
       </div>
 

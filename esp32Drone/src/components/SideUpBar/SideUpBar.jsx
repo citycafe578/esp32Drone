@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import './SideUpBar.css';
+import MapComponent from '../MapComponent/MapComponent';
 
 const SideUpBar = () => {
   const [open, setOpen] = useState(false);
@@ -18,7 +19,7 @@ const SideUpBar = () => {
 
           <div style={{display: 'flex', flexDirection: 'row', width: '100%', height: '95%'}}>
             <div id='auto_pilot_map'>
-              <h1>Autopilot Map</h1>
+              <MapComponent />
             </div>
 
             <div id='waypoint_setting'>
