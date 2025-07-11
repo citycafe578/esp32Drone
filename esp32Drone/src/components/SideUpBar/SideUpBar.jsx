@@ -20,7 +20,7 @@ const SideUpBar = ({ open, setOpen }) => {
             <div id='waypoint_setting'>
               <div id='save_and_cancel_btns_bar' style={{display: 'flex', flexDirection: 'row', width: '100%', height: '10%', alignItems: 'center', justifyContent: 'space-between'}}>
                 <button className='save_and_cancel_btns'>Save</button>
-                <button className='save_and_cancel_btns'>Cancel</button>
+                <button className='save_and_cancel_btns'>Clear</button>
               </div>
             </div>
           </div>
