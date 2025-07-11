@@ -3,7 +3,7 @@ import './App.css'
 
 const OtherDataItem = ({title, return_data}) => {
   return(
-    <div className='other_item' style={{display: 'flex', flexDirection: 'column', backgroundColor: 'gray', width: '340px', height: '180px', margin: '15px', borderRadius: '10px'}}>
+    <div className='other_item' style={{display: 'flex', flexDirection: 'column', backgroundColor: 'gray', width: '20%', height: '180px', margin: '15px', borderRadius: '10px'}}>
       <div style={{display: 'flex', width: '100%', height: '150px', alignItems: 'center', justifyContent: 'center'}}>
         <h2>{title}</h2>
       </div>
@@ -28,6 +28,15 @@ const SideUpBar = () => {
   );
 };
 
+const AutoDriveBTN = () => {
+  const [side, setSide] = useState(false) //左邊一般模式(false) 右邊自動駕駛介面(true)
+  return(
+    <div style={{width: "100vh", height: "100px", display: "flex", justifyContent: "center"}}>
+      <h1>這裡先不用之後再搞</h1>
+    </div>
+  )
+}
+
 const App = () => {
   return (
     <div id="app-wrapper" style={{display: 'flex', flexDirection: 'column',height: '100vh'}}>
@@ -40,7 +49,7 @@ const App = () => {
         </div>
       </div>
 
-      <div id='other_display' style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
+      <div id='other_display' style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%'}}>
         <OtherDataItem title = 'COURSE' return_data = ' ' />
         <OtherDataItem title = 'HEIGHT' return_data = ' ' />
         <OtherDataItem title = '123' return_data = ' ' />
