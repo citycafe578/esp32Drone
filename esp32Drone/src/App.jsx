@@ -17,6 +17,7 @@ const OtherDataItem = ({title, return_data}) => {
 };
 
 const App = () => {
+  const [sideUpBarOpen, setSideUpBarOpen] = useState(false);
   return (
     <div id="app-wrapper" style={{display: 'flex', flexDirection: 'column',height: '100vh'}}>
       <div id='digital_display'>
@@ -24,10 +25,9 @@ const App = () => {
           <h1>stream</h1>
         </div>
         <div id='map' className='digital_item'>
-          <MapComponent />
+          {!sideUpBarOpen && <MapComponent />}
         </div>
       </div>
-
       <div id='other_display' style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%'}}>
         <OtherDataItem title = 'COURSE' return_data = ' ' />
         <OtherDataItem title = 'HEIGHT' return_data = ' ' />
@@ -35,9 +35,7 @@ const App = () => {
         <OtherDataItem title = '456' return_data = ' ' />
         <OtherDataItem title = '789' return_data = ' ' />
       </div>
-      
-      <SideUpBar/>
-      
+      <SideUpBar open={sideUpBarOpen} setOpen={setSideUpBarOpen}/>
     </div>
   );
 }
