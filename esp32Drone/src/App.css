@@ -49,6 +49,7 @@ body {
 
 .bottom-sheet.open {
   transform: translateY(0%);
+  z-index: 999;
 }
 
 .drag-handle {
@@ -68,11 +69,77 @@ body {
 }
 
 .sheet-content {
-  width: 1200px;
-  background-color: #fff;
+  width: 75%;
+  background-color: rgb(174, 173, 173);
   padding: 20px;
   height: 95vh;
   border-top-left-radius: 15px;
   border-top-right-radius: 15px;
   box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column; 
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.4);
+  z-index: 998;
+}
+
+#auto_pilot_map {
+  width: 70%;
+  max-width: 70%;
+  height: 95%;
+  background-color: gray;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 70%;
+  margin: 15px;
+  border-radius: 10px;
+}
+
+#waypoint_setting{
+  width: 30%;
+  max-width: 30%;
+  height: 95%;
+  background-color: gray;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 30%;
+  margin: 15px;
+  border-radius: 10px;
+}
+
+.save_and_cancel_btns_bar {
+  display: flex;
+  justify-content: space-between;
+  width: 50%;
+  margin-top: 100%;
+}
+
+.save_and_cancel_btns {
+  flex: 1;
+  margin: 0 8px;
+  padding: 10px 0;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #4f8cff 0%, #38e6c9 100%);
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+  text-align: center;
+}
+
+.save_and_cancel_btns:hover {
+  background: linear-gradient(90deg, #38e6c9 0%, #4f8cff 100%);
+  transform: translateY(-2px) scale(1.04);
 }

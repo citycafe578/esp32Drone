@@ -17,21 +17,41 @@ const OtherDataItem = ({title, return_data}) => {
 const SideUpBar = () => {
   const [open, setOpen] = useState(false);
   return (
-    <div className={`bottom-sheet ${open ? 'open' : ''}`}>
-      <div className="drag-handle" onClick={() => setOpen(!open)}>
-        <div className="handle-bar" />
+    <>
+      {open && <div className="overlay" />}
+      <div className={`bottom-sheet ${open ? 'open' : ''}`}>
+        <div className="drag-handle" onClick={() => setOpen(!open)}>
+          <div className="handle-bar" />
+        </div>
+        <div className="sheet-content">
+
+          <div style={{width: "100%", height: "5%", display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+            <h2>Autopilot Settings</h2>
+          </div>
+
+          <div style={{display: 'flex', flexDirection: 'row', width: '100%', height: '95%'}}>
+            <div id='auto_pilot_map'>
+              <h1>Autopilot Map</h1>
+            </div>
+
+            <div id='waypoint_setting'>
+              <div id='save_and_cancel_btns_bar' style={{display: 'flex', flexDirection: 'row', width: '100%', height: '10%', alignItems: 'center', justifyContent: 'space-between'}}>
+                <button className='save_and_cancel_btns'>Save</button>
+                <button className='save_and_cancel_btns'>Cancel</button>
+              </div>
+            </div>
+          </div>
+          
+        </div>
       </div>
-      <div className="sheet-content">
-        <h1>ababab</h1>
-      </div>
-    </div>
+    </>
   );
 };
 
 const AutoDriveBTN = () => {
   const [side, setSide] = useState(false) //左邊一般模式(false) 右邊自動駕駛介面(true)
   return(
-    <div style={{width: "100vh", height: "100px", display: "flex", justifyContent: "center"}}>
+    <div style={{width: "100vh", height: "100px", display: "flex", alignItems: 'center', justifyContent: 'center'}}>
       <h1>這裡先不用之後再搞</h1>
     </div>
   )
