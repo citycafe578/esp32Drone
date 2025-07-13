@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import './App.css'
 import SideUpBar from './components/SideUpBar/SideUpBar.jsx';
 import MapComponent from './components/MapComponent/MapComponent.jsx';
+import SettingBtn from './components/Setting_btn/Setting_btn.jsx';
 
 const OtherDataItem = ({title, return_data}) => {
   return(
@@ -36,6 +37,7 @@ const App = () => {
         <OtherDataItem title = '789' return_data = ' ' />
       </div>
       <SideUpBar open={sideUpBarOpen} setOpen={setSideUpBarOpen}/>
+      <SettingBtn/>
     </div>
   );
 }
