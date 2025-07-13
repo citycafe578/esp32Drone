@@ -17,8 +17,18 @@ const OtherDataItem = ({title, return_data}) => {
   )
 };
 
+const Setting_entry = ({title, image}) => {
+  return(
+    <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '350px', height: '350px', margin: '15px', borderRadius: '10px', backgroundColor: 'gray'}}>
+      <img src={image} alt={title} style={{width: '50px', height: '50px'}} />
+      <h3>{title}</h3>
+    </div>
+  )
+}
+
 const App = () => {
   const [sideUpBarOpen, setSideUpBarOpen] = useState(false);
+  const [showSetting, setShowSetting] = useState(false);
   return (
     <div id="app-wrapper" style={{display: 'flex', flexDirection: 'column',height: '100vh'}}>
       <div id='digital_display'>
@@ -37,7 +47,22 @@ const App = () => {
         <OtherDataItem title = '789' return_data = ' ' />
       </div>
       <SideUpBar open={sideUpBarOpen} setOpen={setSideUpBarOpen}/>
-      <SettingBtn/>
+      <SettingBtn onClick={() => setShowSetting(true)}/>
+
+      {showSetting && (
+        <div className="setting-overlay">
+          <div className="setting-modal">
+            <h2>設定介面</h2>
+            <button onClick={() => setShowSetting(false)}>關閉</button>
+            <div className="setting-entries" style={{display: 'flex', justifyContent: 'space-between', flexDirection: 'row'}}>
+              <Setting_entry title="Joystick Setting" image="/joystick.png" />
+              <Setting_entry title="Drone Setting" image="/drone.png" />
+              <Setting_entry title="Flight Records" image="/folder.png" />
+              <Setting_entry title="Other Setting" image="/gear.png" />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
