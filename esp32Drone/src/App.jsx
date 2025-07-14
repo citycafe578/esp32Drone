@@ -90,8 +90,17 @@ const App = () => {
       {showSetting && (
         <div className="setting-overlay">
           <div className="setting-modal">
-            <h2>設定介面</h2>
-            <button onClick={() => setShowSetting(false)}>關閉</button>
+            <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', height: '100%'}}>
+              <h2>
+                {settingPage === ''
+                  ? 'Settings'
+                  : settingEntries.find(e => e.key === settingPage)?.title || 'Settings'}
+              </h2>
+              {settingPage === ''
+                ? <button onClick={() => setShowSetting(false)}>close</button>
+                : <button onClick={() => setSettingPage('')}>back</button>
+              }
+            </div>
             {renderSettingContent()}
           </div>
         </div>
