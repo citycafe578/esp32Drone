@@ -15,6 +15,14 @@ const JoystickSetting = () => {
     { key: 'roll', label: 'Roll' },
   ];
  
+  const controlBtns = [
+    { key: 'start up', label: 'Start Up' },
+    { key: 'speed mode', label: 'Speed Mode' },
+    { key: 'downward obstacle avoidance', label: 'Downward Obstacle Avoidance' },
+    { key: 'still dont know', label: 'Still Dont Know' },
+    { key: 'emergency stop', label: 'Emergency Stop' }
+  ];
+
   const [axisMapping, setAxisMapping] = useState({
     altitude: null,
     pitch: null,
@@ -79,61 +87,104 @@ const JoystickSetting = () => {
     const gamepad = gamepads[selectedIndex];
     const axesCount = gamepad.axes.length;
     const startValues = [...gamepad.axes];
-    const maxDiffs = Array(axesCount).fill(0);
-    let startTime = null;
+    let bound = false;
 
-    function detectLoop(ts) {
-      if (!startTime) startTime = ts;
+    function detectLoop() {
       const nowPad = navigator.getGamepads()[gamepad.index];
-      if (nowPad) {
+      if (nowPad && !bound) {
         for (let i = 0; i < axesCount; i++) {
-          const diff = Math.abs(nowPad.axes[i] - startValues[i]);
-          if (diff > maxDiffs[i]) maxDiffs[i] = diff;
+          if (Math.abs(nowPad.axes[i] - startValues[i]) > 0.2) { // 靈敏度門檻
+            setAxisMapping(prev => ({ ...prev, [ctrlKey]: i }));
+            setDetectingKey(null);
+            bound = true;
+            return;
+          }
         }
-      }
-      if (ts - startTime < 3000) {
         requestAnimationFrame(detectLoop);
-      } else {
-        const max = Math.max(...maxDiffs);
-        const axisIdx = maxDiffs.findIndex(v => v === max);
-        setAxisMapping(prev => ({ ...prev, [ctrlKey]: axisIdx }));
-        setDetectingKey(null);
+      } else if (!bound) {
+        requestAnimationFrame(detectLoop);
       }
     }
     requestAnimationFrame(detectLoop);
   };
 
+  const handleDetectBtns = (ctrlKey) => {
+    if (!gamepads[selectedIndex]) return;
+    setDetectingKey(ctrlKey);
+    const gamepad = gamepads[selectedIndex];
+    const buttonsCount = gamepad.buttons.length;
+    const startValues = gamepad.buttons.map(btn => btn.value);
+    let bound = false;
+
+    function detectLoop() {
+      const nowPad = navigator.getGamepads()[gamepad.index];
+      if (nowPad && !bound) {
+        for (let i = 0; i < buttonsCount; i++) {
+          if (Math.abs(nowPad.buttons[i].value - startValues[i]) > 0.2) { // 靈敏度門檻
+            setAxisMapping(prev => ({ ...prev, [ctrlKey]: i }));
+            setDetectingKey(null);
+            bound = true;
+            return;
+          }
+        }
+        requestAnimationFrame(detectLoop);
+      } else if (!bound) {
+        requestAnimationFrame(detectLoop);
+      }
+    }
+    requestAnimationFrame(detectLoop);
+  }
+
   return (
-    <div>
-      <div className="settings">
-        <h1>Joystick List</h1>
-        <select
-          value={selectedIndex}
-          onChange={(e) => setSelectedIndex(e.target.value)}
-        >
-          <option value="">Joystick:</option>
-          {gamepads.map((pad, idx) => (
-            <option key={pad.id} value={idx}>
-              {pad.id}
-            </option>
-          ))}
-        </select>
+    <div id='aaaaaaaaaaaa' style={{ width: '100%' ,display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '20px' ,justifyContent: 'space-around'}}>
+      <div style={{display: 'flex', flexDirection: 'column'}}>
+        <div className="settings" id ="joystick-list">
+          <h1 style={{justifyContent:'left'}}>Joystick List</h1>
+          <select
+            value={selectedIndex}
+            onChange={(e) => setSelectedIndex(e.target.value)}
+          >
+            <option value="">Joystick:</option>
+            {gamepads.map((pad, idx) => (
+              <option key={pad.id} value={idx}>
+                {pad.id}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {controlAxes.map(ctrl => (
+          <div className='settings' key={ctrl.key}>
+            <h1 style={{justifyContent:'left'}}>{ctrl.label}</h1>
+            <button
+              onClick={() => handleDetectAxis(ctrl.key)}
+              disabled={detectingKey !== null || !gamepads[selectedIndex]}
+            >
+              {detectingKey === ctrl.key ? '偵測中...' : '偵測搖桿軸'}
+            </button>
+            <span style={{marginLeft: '12px'}}>
+              {axisMapping[ctrl.key] !== null ? `已綁定搖桿軸：${axisMapping[ctrl.key]}` : '尚未綁定'}
+            </span>
+          </div>
+        ))}
       </div>
 
-      {controlAxes.map(ctrl => (
-        <div className='settings' key={ctrl.key}>
-          <h1>{ctrl.label}</h1>
-          <button
-            onClick={() => handleDetectAxis(ctrl.key)}
-            disabled={detectingKey !== null || !gamepads[selectedIndex]}
-          >
-            {detectingKey === ctrl.key ? '偵測中...' : '偵測搖桿軸'}
-          </button>
-          <span style={{marginLeft: '12px'}}>
-            {axisMapping[ctrl.key] !== null ? `已綁定搖桿軸：${axisMapping[ctrl.key]}` : '尚未綁定'}
-          </span>
-        </div>
-      ))}
+      <div style={{display: 'flex', flexDirection: 'column', }}>
+        {controlBtns.map(ctrl => (
+          <div className='settings' key={ctrl.key}>
+            <h1 style={{justifyContent:'left'}}>{ctrl.label}</h1>
+            <button
+              onClick={() => handleDetectBtns(ctrl.key)}
+              disabled={detectingKey !== null || !gamepads[selectedIndex]}
+            >
+              {detectingKey === ctrl.key ? '偵測中...' : '偵測按鈕'}
+            </button>
+            <span style={{marginLeft: '12px'}}>
+              {axisMapping[ctrl.key] !== null ? `已綁定按鈕：${axisMapping[ctrl.key]}` : '尚未綁定'}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
