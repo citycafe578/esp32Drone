@@ -90,7 +90,7 @@ const App = () => {
       if (data[joystickIndex]) {
         Object.entries(axisMapping).forEach(([key, axisIdx]) => {
           if (axisIdx !== null && data[joystickIndex].axes[axisIdx] !== undefined) {
-            result += `${key}: ${data[joystickIndex].axes[axisIdx].toFixed(2)}<br>`;
+            result += `${key}: ${data[joystickIndex].axes[axisIdx].toFixed(3)}<br>`;
           }
         });
       }
@@ -108,7 +108,7 @@ const App = () => {
       // 比python還要玄
       // 一堆奇怪的語法
       // 我直接用AI生成還比較快
-      
+
       // console.log(data)
       rafId = requestAnimationFrame(updateLive);
     }
