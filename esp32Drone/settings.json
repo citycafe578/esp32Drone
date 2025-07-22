@@ -1,0 +1,16 @@
+{
+  "axisMapping": {
+    "altitude": null,
+    "pitch": null,
+    "yaw": null,
+    "roll": null
+  },
+  
+  "btnMapping": {
+    "start up": null,
+    "speed mode": null,
+    "downward obstacle avoidance": null,
+    "still dont know": null,
+    "emergency stop": null
+  }
+}

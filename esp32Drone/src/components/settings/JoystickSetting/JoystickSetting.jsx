@@ -23,12 +23,30 @@ const JoystickSetting = () => {
     { key: 'emergency stop', label: 'Emergency Stop' }
   ];
 
-  const [axisMapping, setAxisMapping] = useState({
-    altitude: null,
-    pitch: null,
-    yaw: null,
-    roll: null,
-  });
+  const getInitAxisMapping = () => {
+    const local = localStorage.getItem('axisMapping');
+    if (local) return JSON.parse(local);
+    return {
+      altitude: null,
+      pitch: null,
+      yaw: null,
+      roll: null,
+    };
+  };
+  const getInitBtnMapping = () => {
+    const local = localStorage.getItem('btnMapping');
+    if (local) return JSON.parse(local);
+    return {
+      'start up': null,
+      'speed mode': null,
+      'downward obstacle avoidance': null,
+      'still dont know': null,
+      'emergency stop': null
+    };
+  };
+
+  const [axisMapping, setAxisMapping] = useState(getInitAxisMapping);
+  const [btnMapping, setBtnMapping] = useState(getInitBtnMapping);
   const [detectingKey, setDetectingKey] = useState(null);
 
   const updateGamepads = () => {
@@ -94,7 +112,11 @@ const JoystickSetting = () => {
       if (nowPad && !bound) {
         for (let i = 0; i < axesCount; i++) {
           if (Math.abs(nowPad.axes[i] - startValues[i]) > 0.2) { // 靈敏度門檻
-            setAxisMapping(prev => ({ ...prev, [ctrlKey]: i }));
+            setAxisMapping(prev => {
+              const updated = { ...prev, [ctrlKey]: i };
+              saveSettings(updated, btnMapping);
+              return updated;
+            });
             setDetectingKey(null);
             bound = true;
             return;
@@ -121,7 +143,11 @@ const JoystickSetting = () => {
       if (nowPad && !bound) {
         for (let i = 0; i < buttonsCount; i++) {
           if (Math.abs(nowPad.buttons[i].value - startValues[i]) > 0.2) { // 靈敏度門檻
-            setAxisMapping(prev => ({ ...prev, [ctrlKey]: i }));
+            setBtnMapping(prev => {
+              const updated = { ...prev, [ctrlKey]: i };
+              saveSettings(axisMapping, updated);
+              return updated;
+            });
             setDetectingKey(null);
             bound = true;
             return;
@@ -135,10 +161,15 @@ const JoystickSetting = () => {
     requestAnimationFrame(detectLoop);
   }
 
+  function saveSettings(newAxis, newBtn) {
+    localStorage.setItem('axisMapping', JSON.stringify(newAxis));
+    localStorage.setItem('btnMapping', JSON.stringify(newBtn));
+  }
+
   return (
     <div id='aaaaaaaaaaaa' style={{ width: '100%' ,display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '20px' ,justifyContent: 'space-around'}}>
       <div style={{display: 'flex', flexDirection: 'column'}}>
-        <div className="settings" id ="joystick-list">
+        <div className="settings" id ="joystick-list" style={{display: 'flex', justifyContent: 'space-between'}}>
           <h1 style={{justifyContent:'left'}}>Joystick List</h1>
           <select
             value={selectedIndex}
@@ -180,7 +211,7 @@ const JoystickSetting = () => {
               {detectingKey === ctrl.key ? '偵測中...' : '偵測按鈕'}
             </button>
             <span style={{marginLeft: '12px'}}>
-              {axisMapping[ctrl.key] !== null ? `已綁定按鈕：${axisMapping[ctrl.key]}` : '尚未綁定'}
+              {btnMapping[ctrl.key] !== null ? `已綁定按鈕：${btnMapping[ctrl.key]}` : '尚未綁定'}
             </span>
           </div>
         ))}

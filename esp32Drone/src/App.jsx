@@ -34,6 +34,7 @@ const App = () => {
   const [sideUpBarOpen, setSideUpBarOpen] = useState(false);
   const [showSetting, setShowSetting] = useState(false);
   const [settingPage, setSettingPage] = useState('');
+  const [joystickLiveData, setJoystickLiveData] = useState([]);
 
   const settingEntries = [
     { key: 'joystick', title: 'Joystick Setting', image: '/joystick.png' },
@@ -67,6 +68,53 @@ const App = () => {
         );
     }
   };
+
+  useEffect(() => {
+    let rafId;
+    function updateLive() {
+      const pads = navigator.getGamepads ? Array.from(navigator.getGamepads()).filter(Boolean) : [];
+      const data = pads.map(pad => ({
+        id: pad.id,
+        axes: [...pad.axes],
+        buttons: pad.buttons.map(btn => btn.value)
+      }));
+      setJoystickLiveData(data);
+      const stream_words = document.getElementById('stream');
+      // debug mode
+      // stream_words.innerHTML = JSON.stringify(data, null, 2);
+
+      // 取得所有有綁定的軸數值
+      const axisMapping = JSON.parse(localStorage.getItem('axisMapping') || '{}');
+      const joystickIndex = 0; // 你要顯示哪個搖桿（可根據需求調整）
+      let result = '';
+      if (data[joystickIndex]) {
+        Object.entries(axisMapping).forEach(([key, axisIdx]) => {
+          if (axisIdx !== null && data[joystickIndex].axes[axisIdx] !== undefined) {
+            result += `${key}: ${data[joystickIndex].axes[axisIdx].toFixed(2)}<br>`;
+          }
+        });
+      }
+      // 取得所有有綁定的按鈕數值
+      const btnMapping = JSON.parse(localStorage.getItem('btnMapping') || '{}');
+      if (data[joystickIndex]) {
+        Object.entries(btnMapping).forEach(([key, btnIdx]) => {
+          if (btnIdx !== null && data[joystickIndex].buttons[btnIdx] !== undefined) {
+            result += `${key}: ${data[joystickIndex].buttons[btnIdx]}<br>`;
+          }
+        });
+      }
+      stream_words.innerHTML = result || '尚未綁定';
+      // 肏我討厭JS甚麼鬼邏輯
+      // 比python還要玄
+      // 一堆奇怪的語法
+      // 我直接用AI生成還比較快
+      
+      // console.log(data)
+      rafId = requestAnimationFrame(updateLive);
+    }
+    updateLive();
+    return () => cancelAnimationFrame(rafId);
+  }, []);
 
   return (
     <div id="app-wrapper" style={{display: 'flex', flexDirection: 'column',height: '100vh'}}>
