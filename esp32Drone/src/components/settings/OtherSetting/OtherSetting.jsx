@@ -1,4 +1,14 @@
+import { useState } from 'react';
+
+const UsbPortMapping = () => {
+  
+}
+
 const OtherSetting = () => {
-  return <div>Other Setting 內容（之後再調整）</div>;
+  return (
+    <div style={{height: '100%', width: '100%'}}>
+      <UsbPortMapping/>
+    </div>
+  );
 };
 export default OtherSetting;

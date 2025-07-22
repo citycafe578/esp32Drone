@@ -83,9 +83,8 @@ const App = () => {
       // debug mode
       // stream_words.innerHTML = JSON.stringify(data, null, 2);
 
-      // 取得所有有綁定的軸數值
       const axisMapping = JSON.parse(localStorage.getItem('axisMapping') || '{}');
-      const joystickIndex = 0; // 你要顯示哪個搖桿（可根據需求調整）
+      const joystickIndex = JSON.parse(localStorage.getItem('joystickIndex')) || 0;
       let result = '';
       if (data[joystickIndex]) {
         Object.entries(axisMapping).forEach(([key, axisIdx]) => {
@@ -93,8 +92,8 @@ const App = () => {
             result += `${key}: ${data[joystickIndex].axes[axisIdx].toFixed(3)}<br>`;
           }
         });
+        result = `<b>Joystick: ${data[joystickIndex].id}</b><br>` + result;
       }
-      // 取得所有有綁定的按鈕數值
       const btnMapping = JSON.parse(localStorage.getItem('btnMapping') || '{}');
       if (data[joystickIndex]) {
         Object.entries(btnMapping).forEach(([key, btnIdx]) => {

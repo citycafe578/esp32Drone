@@ -1,11 +1,12 @@
 {
+  "joystickIndex": 0,
   "axisMapping": {
     "altitude": null,
     "pitch": null,
     "yaw": null,
     "roll": null
   },
-  
+
   "btnMapping": {
     "start up": null,
     "speed mode": null,

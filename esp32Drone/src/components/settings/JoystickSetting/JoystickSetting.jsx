@@ -23,6 +23,12 @@ const JoystickSetting = () => {
     { key: 'emergency stop', label: 'Emergency Stop' }
   ];
 
+  const getInitJoystickIndex = () => {
+    const local = localStorage.getItem('joystickIndex');
+    if(local) return JSON.parse(local);
+    return 0;
+  }
+
   const getInitAxisMapping = () => {
     const local = localStorage.getItem('axisMapping');
     if (local) return JSON.parse(local);
@@ -66,38 +72,43 @@ const JoystickSetting = () => {
     };
   }, []);
 
-  const handleDetectAxes = () => {
-    if (!gamepads[selectedIndex]) return;
-    setDetecting(true);
-    setMaxAxis(null);
-    setMaxDelta(null);
-    const gamepad = gamepads[selectedIndex];
-    const axesCount = gamepad.axes.length;
-    const startValues = [...gamepad.axes];
-    const maxDiffs = Array(axesCount).fill(0);
-    let startTime = null;
+  useEffect(() => {
+    localStorage.setItem('joystickIndex', JSON.stringify(selectedIndex));
+  }, [selectedIndex]);
 
-    function detectLoop(ts) {
-      if (!startTime) startTime = ts;
-      const nowPad = navigator.getGamepads()[gamepad.index];
-      if (nowPad) {
-        for (let i = 0; i < axesCount; i++) {
-          const diff = Math.abs(nowPad.axes[i] - startValues[i]);
-          if (diff > maxDiffs[i]) maxDiffs[i] = diff;
-        }
-      }
-      if (ts - startTime < 3000) {
-        requestAnimationFrame(detectLoop);
-      } else {
-        const max = Math.max(...maxDiffs);
-        const axisIdx = maxDiffs.findIndex(v => v === max);
-        setMaxAxis(axisIdx);
-        setMaxDelta(max);
-        setDetecting(false);
-      }
-    }
-    requestAnimationFrame(detectLoop);
-  };
+  // 舊版偵測搖桿訊號(三秒內尋找變化最大的軸)
+  // const handleDetectAxes = () => {
+  //   if (!gamepads[selectedIndex]) return;
+  //   setDetecting(true);
+  //   setMaxAxis(null);
+  //   setMaxDelta(null);
+  //   const gamepad = gamepads[selectedIndex];
+  //   const axesCount = gamepad.axes.length;
+  //   const startValues = [...gamepad.axes];
+  //   const maxDiffs = Array(axesCount).fill(0);
+  //   let startTime = null;
+
+  //   function detectLoop(ts) {
+  //     if (!startTime) startTime = ts;
+  //     const nowPad = navigator.getGamepads()[gamepad.index];
+  //     if (nowPad) {
+  //       for (let i = 0; i < axesCount; i++) {
+  //         const diff = Math.abs(nowPad.axes[i] - startValues[i]);
+  //         if (diff > maxDiffs[i]) maxDiffs[i] = diff;
+  //       }
+  //     }
+  //     if (ts - startTime < 3000) {
+  //       requestAnimationFrame(detectLoop);
+  //     } else {
+  //       const max = Math.max(...maxDiffs);
+  //       const axisIdx = maxDiffs.findIndex(v => v === max);
+  //       setMaxAxis(axisIdx);
+  //       setMaxDelta(max);
+  //       setDetecting(false);
+  //     }
+  //   }
+  //   requestAnimationFrame(detectLoop);
+  // };
 
   const handleDetectAxis = (ctrlKey) => {
     if (!gamepads[selectedIndex]) return;
