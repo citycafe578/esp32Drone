@@ -4,6 +4,7 @@
   bottom: 0px;
   border-radius: 10px;
   background-color: transparent;
+  z-index: 3;
 }
 
 .setting-btn img {
