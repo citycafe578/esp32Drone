@@ -4,9 +4,9 @@
   padding: 0;
 }
 
-html, body {
+/* html, body {
   height: 100%;
-}
+} */
 
 body {
   background-color: rgb(174, 173, 173);
@@ -27,9 +27,9 @@ body {
 
 .digital_item {
   flex: 1;
-  margin: 15px;
-  height: 90%;
-  width: 1200px;
+  margin: 10px;
+  height: 95%;
+  width: 50%;
   background-color: gray;
   border-radius: 10px;
 }

@@ -116,7 +116,7 @@ const App = () => {
   }, []);
 
   return (
-    <div id="app-wrapper" style={{display: 'flex', flexDirection: 'column',height: '100vh'}}>
+    <div id="app-wrapper" style={{display: 'flex', flexDirection: 'column',height: '100%'}}>
       <div id='digital_display'>
         <div id='stream' className='digital_item'>
           <h1>stream</h1>
@@ -125,7 +125,7 @@ const App = () => {
           {!sideUpBarOpen && <MapComponent />}
         </div>
       </div>
-      <div id='other_display' style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%'}}>
+      <div id='other_display' style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%', height: '20vh'}}>
         <OtherDataItem title = 'COURSE' return_data = ' ' />
         <OtherDataItem title = 'HEIGHT' return_data = ' ' />
         <OtherDataItem title = '123' return_data = ' ' />
