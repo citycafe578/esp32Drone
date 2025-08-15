@@ -14,7 +14,7 @@ const JoystickSetting = () => {
     { key: 'yaw', label: 'Yaw' },
     { key: 'roll', label: 'Roll' },
   ];
- 
+
   const controlBtns = [
     { key: 'start up', label: 'Start Up' },
     { key: 'speed mode', label: 'Speed Mode' },
@@ -178,9 +178,9 @@ const JoystickSetting = () => {
   }
 
   return (
-    <div id='aaaaaaaaaaaa' style={{ width: '100%' ,display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '20px' ,justifyContent: 'space-around'}}>
+    <div id='aaaaaaaaaaaa' style={{ width: '100%' ,height: '100%',display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '20px' ,justifyContent: 'space-around', flex: '1'}}>
       <div style={{display: 'flex', flexDirection: 'column'}}>
-        <div className="settings" id ="joystick-list" style={{display: 'flex', justifyContent: 'space-between'}}>
+        <div className="settings" id ="joystick-list" style={{display: 'flex', justifyContent: 'space-between', flex:'1'}}>
           <h1 style={{justifyContent:'left'}}>Joystick List</h1>
           <select
             value={selectedIndex}
