@@ -10,7 +10,7 @@ import OtherSetting from './components/settings/OtherSetting/OtherSetting.jsx';
 
 const OtherDataItem = ({title, return_data}) => {
   return(
-    <div className='other_item' style={{display: 'flex', flexDirection: 'column', backgroundColor: 'gray', width: '20%', height: '180px', margin: '15px', borderRadius: '10px'}}>
+    <div className='other_item' style={{display: 'flex', flexDirection: 'column', backgroundColor: 'gray', width: '20%', height: '100%', margin: '15px', borderRadius: '10px'}}>
       <div style={{display: 'flex', width: '100%', height: '150px', alignItems: 'center', justifyContent: 'center'}}>
         <h2>{title}</h2>
       </div>
@@ -23,7 +23,7 @@ const OtherDataItem = ({title, return_data}) => {
 
 const Setting_entry = ({title, image, onClick}) => {
   return(
-    <button onClick={onClick} style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '350px', height: '350px', margin: '15px', borderRadius: '10px', backgroundColor: 'gray'}}>
+    <button onClick={onClick} style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '24%', aspectRatio: '1 / 1', margin: '0.5%', borderRadius: '10px', backgroundColor: 'gray'}}>
       <img src={image} alt={title} style={{width: '50px', height: '50px'}} />
       <h3>{title}</h3>
     </button>
@@ -55,7 +55,7 @@ const App = () => {
         return <OtherSetting />;
       default:
         return (
-          <div className="setting-entries" style={{display: 'flex', justifyContent: 'space-between', flexDirection: 'row'}}>
+          <div className="setting-entries" style={{display: 'flex', justifyContent: 'space-between', flexDirection: 'row', height: '70vh',width:'100%', flexWrap: 'wrap', alignItems: 'center'}}>
             {settingEntries.map(entry => (
               <Setting_entry
                 key={entry.key}
@@ -137,7 +137,7 @@ const App = () => {
       {showSetting && (
         <div className="setting-overlay">
           <div className="setting-modal">
-            <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', height: '100%'}}>
+            <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', height: '5vh'}}>
               <h2>
                 {settingPage === ''
                   ? 'Settings'
