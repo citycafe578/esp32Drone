@@ -18,14 +18,14 @@ const JoystickSetting = () => {
   const controlBtns = [
     { key: 'start up', label: 'Start Up' },
     { key: 'speed mode', label: 'Speed Mode' },
-    { key: 'downward obstacle avoidance', label: 'Downward Obstacle Avoidance' },
+    { key: 'obstacle avoidance', label: 'Obstacle Avoidance' },
     { key: 'still dont know', label: 'Still Dont Know' },
     { key: 'emergency stop', label: 'Emergency Stop' }
   ];
 
   const getInitJoystickIndex = () => {
     const local = localStorage.getItem('joystickIndex');
-    if(local) return JSON.parse(local);
+    if (local) return JSON.parse(local);
     return 0;
   }
 
@@ -178,54 +178,59 @@ const JoystickSetting = () => {
   }
 
   return (
-    <div id='aaaaaaaaaaaa' style={{ width: '100%' ,height: '100%',display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '20px' ,justifyContent: 'space-around', flex: '1'}}>
-      <div style={{display: 'flex', flexDirection: 'column'}}>
-        <div className="settings" id ="joystick-list" style={{display: 'flex', justifyContent: 'space-between', flex:'1'}}>
-          <h1 style={{justifyContent:'left'}}>Joystick List</h1>
-          <select
-            value={selectedIndex}
-            onChange={(e) => setSelectedIndex(e.target.value)}
-          >
-            <option value="">Joystick:</option>
-            {gamepads.map((pad, idx) => (
-              <option key={pad.id} value={idx}>
-                {pad.id}
-              </option>
-            ))}
-          </select>
+    <div id='aaaaaaaaaaaa' style={{ width: '100%', height: '100%' }}>
+      <div style={{ width: '100%', height: '63vh', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flex: '1'}}>
+        {/* 左邊設定 */}
+        <div style={{ display: 'flex', flexDirection: 'column', flex: '1', width: '50%', height: '100%', alignItems: 'center', justifyContent: 'center'}}>
+          <div className="settings" id="joystick-list">
+            <h1 style={{ justifyContent: 'left' }}>Joystick List</h1>
+            <select
+              value={selectedIndex}
+              onChange={(e) => setSelectedIndex(e.target.value)}
+            >
+              <option value="">Joystick:</option>
+              {gamepads.map((pad, idx) => (
+                <option key={pad.id} value={idx}>
+                  {pad.id}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {controlAxes.map(ctrl => (
+            <div className='settings' key={ctrl.key}>
+              <h1 style={{ justifyContent: 'left' }}>{ctrl.label}</h1>
+              <button
+                onClick={() => handleDetectAxis(ctrl.key)}
+                disabled={detectingKey !== null || !gamepads[selectedIndex]}
+              >
+                {detectingKey === ctrl.key ? '偵測中...' : '偵測搖桿軸'}
+              </button>
+              <span style={{ marginLeft: '12px' }}>
+                {axisMapping[ctrl.key] !== null ? `已綁定搖桿軸：${axisMapping[ctrl.key]}` : '尚未綁定'}
+              </span>
+            </div>
+          ))}
         </div>
 
-        {controlAxes.map(ctrl => (
-          <div className='settings' key={ctrl.key}>
-            <h1 style={{justifyContent:'left'}}>{ctrl.label}</h1>
-            <button
-              onClick={() => handleDetectAxis(ctrl.key)}
-              disabled={detectingKey !== null || !gamepads[selectedIndex]}
-            >
-              {detectingKey === ctrl.key ? '偵測中...' : '偵測搖桿軸'}
-            </button>
-            <span style={{marginLeft: '12px'}}>
-              {axisMapping[ctrl.key] !== null ? `已綁定搖桿軸：${axisMapping[ctrl.key]}` : '尚未綁定'}
-            </span>
-          </div>
-        ))}
-      </div>
+        {/* 右邊設定 */}
+        <div style={{ display: 'flex', flexDirection: 'column', flex: '1', width: '50%', height: '100%', alignItems: 'center', justifyContent: 'center'}}>
+          {controlBtns.map(ctrl => (
+            <div className='settings' key={ctrl.key}>
+              <h1 style={{ justifyContent: 'left' }}>{ctrl.label}</h1>
+              <button
+                onClick={() => handleDetectBtns(ctrl.key)}
+                disabled={detectingKey !== null || !gamepads[selectedIndex]}
+              >
+                {detectingKey === ctrl.key ? '偵測中...' : '偵測按鈕'}
+              </button>
+              <span style={{ marginLeft: '12px' }}>
+                {btnMapping[ctrl.key] !== null ? `已綁定按鈕：${btnMapping[ctrl.key]}` : '尚未綁定'}
+              </span>
+            </div>
+          ))}
+        </div>
 
-      <div style={{display: 'flex', flexDirection: 'column', }}>
-        {controlBtns.map(ctrl => (
-          <div className='settings' key={ctrl.key}>
-            <h1 style={{justifyContent:'left'}}>{ctrl.label}</h1>
-            <button
-              onClick={() => handleDetectBtns(ctrl.key)}
-              disabled={detectingKey !== null || !gamepads[selectedIndex]}
-            >
-              {detectingKey === ctrl.key ? '偵測中...' : '偵測按鈕'}
-            </button>
-            <span style={{marginLeft: '12px'}}>
-              {btnMapping[ctrl.key] !== null ? `已綁定按鈕：${btnMapping[ctrl.key]}` : '尚未綁定'}
-            </span>
-          </div>
-        ))}
       </div>
     </div>
   );
