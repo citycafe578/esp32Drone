@@ -23,11 +23,11 @@ const JoystickSetting = () => {
     { key: 'emergency stop', label: 'Emergency Stop' }
   ];
 
-  const getInitJoystickIndex = () => {
-    const local = localStorage.getItem('joystickIndex');
-    if (local) return JSON.parse(local);
-    return 0;
-  }
+  // const getInitJoystickIndex = () => {
+  //   const local = localStorage.getItem('joystickIndex');
+  //   if (local) return JSON.parse(local);
+  //   return 0;
+  // }
 
   const getInitAxisMapping = () => {
     const local = localStorage.getItem('axisMapping');

@@ -37,10 +37,10 @@ const App = () => {
   const [joystickLiveData, setJoystickLiveData] = useState([]);
 
   const settingEntries = [
-    { key: 'joystick', title: 'Joystick Setting', image: '/joystick.png' },
-    { key: 'drone', title: 'Drone Setting', image: '/drone.png' },
+    { key: 'joystick', title: 'Joystick Settings', image: '/joystick.png' },
+    { key: 'drone', title: 'Drone Settings', image: '/drone.png' },
     { key: 'flight', title: 'Flight Records', image: '/folder.png' },
-    { key: 'other', title: 'Other Setting', image: '/gear.png' },
+    { key: 'other', title: 'Other Settings', image: '/gear.png' },
   ];
   
   const renderSettingContent = () => {
