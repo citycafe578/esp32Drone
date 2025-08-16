@@ -13,5 +13,13 @@
     "downward obstacle avoidance": null,
     "still dont know": null,
     "emergency stop": null
-  }
+  },
+
+  "imageTransmission": {
+    "imageTransmission": "null"
+  },
+
+  "reciver": {
+    "reciver": "null"
+  },
 }

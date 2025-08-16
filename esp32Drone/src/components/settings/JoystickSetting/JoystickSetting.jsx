@@ -187,6 +187,7 @@ const JoystickSetting = () => {
             <select
               value={selectedIndex}
               onChange={(e) => setSelectedIndex(e.target.value)}
+              style={{ justifyContent: 'right' }}
             >
               <option value="">Joystick:</option>
               {gamepads.map((pad, idx) => (
