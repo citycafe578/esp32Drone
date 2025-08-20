@@ -4,10 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently \"npm run dev:react\" \"npm run dev:python\"",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:react": "vite",
+    "dev:python": "python ./python/cv.py"
   },
   "dependencies": {
     "leaflet": "^1.9.4",

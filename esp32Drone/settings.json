@@ -15,11 +15,8 @@
     "emergency stop": null
   },
 
-  "imageTransmission": {
-    "imageTransmission": "null"
-  },
-
-  "reciver": {
+  "otherSettings": {
+    "imageTransmission": "null",
     "reciver": "null"
-  },
+  }
 }

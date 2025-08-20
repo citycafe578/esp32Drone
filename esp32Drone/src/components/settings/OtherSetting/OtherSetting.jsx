@@ -1,16 +1,35 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './OtherSetting.css';
 import '../JoystickSetting/JoystickSetting.css';
 
-
 const OtherSetting = () => {
-  const [imageTransmission, setImageTransmission] = useState('');
-  const [reciver, setReciver] = useState('');
+  const [imageTransmission, setImageTransmission] = useState(() => {
+    return JSON.parse(localStorage.getItem('imageTransmission')) || '';
+  });
+  const [reciver, setReciver] = useState(() => {
+    return JSON.parse(localStorage.getItem('reciver')) || '';
+  });
+  const [cameras, setCameras] = useState([]);
 
-  function saveSettings() {
+  useEffect(() => {
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(() => navigator.mediaDevices.enumerateDevices())
+      .then(devices => {
+        const videoInputs = devices.filter(device => device.kind === 'videoinput');
+        setCameras(videoInputs);
+      })
+      .catch(err => {
+        console.error('No device:', err);
+      });
+  }, []);
+
+  useEffect(() => {
     localStorage.setItem('imageTransmission', JSON.stringify(imageTransmission));
-    localStorage.setItem('reciver', JSON.stringify(reciver))
-  }
+  }, [imageTransmission]);
+
+  useEffect(() => {
+    localStorage.setItem('reciver', JSON.stringify(reciver));
+  }, [reciver]);
 
   return (
     <div style={{ height: '63vh', width: '100%', backgroundColor: 'green', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
@@ -24,7 +43,11 @@ const OtherSetting = () => {
             style={{ justifyContent: 'right' }}
           >
             <option value="">Image Transmission:</option>
-
+            {cameras.map((cam, idx) => (
+              <option key={cam.deviceId} value={idx}>
+                {`[${idx}] `}{cam.label || `Camera ${cam.deviceId}`}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -37,7 +60,6 @@ const OtherSetting = () => {
             onChange={(e) => setReciver(e.target.value)}
           >
             <option value="">Reciver:</option>
-
           </select>
         </div>
       </div>

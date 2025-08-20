@@ -102,7 +102,7 @@ const App = () => {
           }
         });
       }
-      stream_words.innerHTML = result || '尚未綁定';
+      // stream_words.innerHTML = result || '尚未綁定'; // debug mode
       // 肏我討厭JS甚麼鬼邏輯
       // 比python還要玄
       // 一堆奇怪的語法
@@ -119,7 +119,8 @@ const App = () => {
     <div id="app-wrapper" style={{display: 'flex', flexDirection: 'column',height: '100%'}}>
       <div id='digital_display'>
         <div id='stream' className='digital_item'>
-          <h1>stream</h1>
+          {/* <h1>stream</h1> */}
+          <img src="http://localhost:5000/video_feed" alt="camera" style={{height: '100%', width: '100%', borderRadius: '10px'}}/>
         </div>
         <div id='map' className='digital_item'>
           {!sideUpBarOpen && <MapComponent />}
