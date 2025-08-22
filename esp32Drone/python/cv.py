@@ -1,28 +1,113 @@
-from flask import Flask, Response
+from flask import Flask, Response, request, jsonify
+from flask_cors import CORS
 import cv2
 import json
+import time
+import os
 
 
 app = Flask(__name__)
-camera = cv2.VideoCapture(0)
-jsonfile = '../settings.json'
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+
+camera = None
+paused = False
+json_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'settings.json'))
+
+
+def get_camera_index():
+    try:
+        with open(json_file, "r", encoding="utf-8") as f:
+            j = json.load(f)
+        idx = int(j["otherSettings"]["imageTransmission"])
+    except Exception:
+        idx = 0
+    return idx
+
+def set_camera(idx):
+    global camera
+    if camera is not None and camera.isOpened():
+        camera.release()
+    camera = cv2.VideoCapture(idx)
+    if not camera.isOpened():
+        print(f"[ERROR] Camera index {idx} open failed! 請確認該 index 是否有攝影機")
+    else:
+        print("Camera set to index:", idx)
+
+@app.route('/set_camera', methods=['POST'])
+def set_camera_route():
+    data = request.get_json()
+    idx = int(data.get('imageTransmission', 0))
+    # 更新 settings.json
+    with open(json_file, "r+", encoding="utf-8") as f:
+        j = json.load(f)
+        j["otherSettings"]["imageTransmission"] = str(idx)
+        f.seek(0)
+        json.dump(j, f, indent=2)
+        f.truncate()
+    set_camera(idx)
+    return jsonify({'status': 'ok', 'camera_index': idx})
+
+@app.route('/pause_camera', methods=['POST'])
+def pause_camera():
+    global paused, camera
+    paused = True
+    if camera is not None and camera.isOpened():
+        camera.release()
+    return jsonify({'status': 'paused'})
+
+@app.route('/resume_camera', methods=['POST'])
+def resume_camera():
+    global paused, camera
+    paused = False
+    idx = get_camera_index()
+    set_camera(idx)
+    return jsonify({'status': 'resumed'})
 
 def generate_frames():
+    global camera, paused
+    last_idx = None
+
     while True:
+        idx = get_camera_index()
+        if last_idx != idx:
+            set_camera(idx)
+            last_idx = idx
+
+        if paused:
+            time.sleep(0.1)
+            continue
+
+        if camera is None or not camera.isOpened():
+            time.sleep(0.5)
+            continue
+
         success, frame = camera.read()
         if not success:
-            break
-        else:
-            frame = cv2.flip(frame, 1)
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+            print(f"[WARN] Can't grab frame from camera index {last_idx}")
+            time.sleep(0.1)
+            continue
+        # frame = cv2.flip(frame, 1)
+        ret, buffer = cv2.imencode('.jpg', frame)
+        frame = buffer.tobytes()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 @app.route('/video_feed')
 def video_feed():
     return Response(generate_frames(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
+@app.route('/list_cameras')
+def list_cameras():
+    import cv2
+    available = []
+    for idx in range(5):
+        cap = cv2.VideoCapture(idx)
+        if cap.isOpened():
+            available.append(idx)
+            cap.release()
+    return jsonify({'cameras': available})
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    set_camera(get_camera_index())
+    app.run(host="0.0.0.0", port=5000, debug=True)

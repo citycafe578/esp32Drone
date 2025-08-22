@@ -6,7 +6,6 @@
     "yaw": null,
     "roll": null
   },
-
   "btnMapping": {
     "start up": null,
     "speed mode": null,
@@ -14,9 +13,8 @@
     "still dont know": null,
     "emergency stop": null
   },
-
   "otherSettings": {
-    "imageTransmission": "null",
+    "imageTransmission": "0",
     "reciver": "null"
   }
 }
