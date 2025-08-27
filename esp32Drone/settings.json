@@ -14,11 +14,13 @@
     "emergency stop": null
   },
   "otherSettings": {
-    "imageTransmission": "0",
+    "imageTransmission": "2",
     "reciver": "null"
   },
   "droneSettings": {
     "minimumCruisingAltitude": "OFF",
-    "lowAltitudeWarning": "OFF"
+    "lowAltitudeWarning": "100",
+    "imageHorizontalFlip": false,
+    "imageVerticalFlip": false
   }
 }

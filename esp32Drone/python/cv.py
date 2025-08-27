@@ -5,7 +5,6 @@ import json
 import time
 import os
 
-
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
@@ -23,6 +22,7 @@ def get_camera_index():
         idx = 0
     return idx
 
+
 def set_camera(idx):
     global camera
     if camera is not None and camera.isOpened():
@@ -33,11 +33,11 @@ def set_camera(idx):
     else:
         print("Camera set to index:", idx)
 
+
 @app.route('/set_camera', methods=['POST'])
 def set_camera_route():
     data = request.get_json()
     idx = int(data.get('imageTransmission', 0))
-    # 更新 settings.json
     with open(json_file, "r+", encoding="utf-8") as f:
         j = json.load(f)
         j["otherSettings"]["imageTransmission"] = str(idx)
@@ -47,6 +47,7 @@ def set_camera_route():
     set_camera(idx)
     return jsonify({'status': 'ok', 'camera_index': idx})
 
+
 @app.route('/pause_camera', methods=['POST'])
 def pause_camera():
     global paused, camera
@@ -55,6 +56,7 @@ def pause_camera():
         camera.release()
     return jsonify({'status': 'paused'})
 
+
 @app.route('/resume_camera', methods=['POST'])
 def resume_camera():
     global paused, camera
@@ -62,6 +64,7 @@ def resume_camera():
     idx = get_camera_index()
     set_camera(idx)
     return jsonify({'status': 'resumed'})
+
 
 def generate_frames():
     global camera, paused
@@ -74,6 +77,9 @@ def generate_frames():
             last_idx = idx
 
         if paused:
+            if camera is not None and camera.isOpened():
+                camera.release()
+                camera = None
             time.sleep(0.1)
             continue
 
@@ -86,7 +92,15 @@ def generate_frames():
             print(f"[WARN] Can't grab frame from camera index {last_idx}")
             time.sleep(0.1)
             continue
-        # frame = cv2.flip(frame, 1)
+
+        with open(json_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        if data["droneSettings"]["imageHorizontalFlip"]:
+            frame = cv2.flip(frame, 1)
+        if data["droneSettings"]["imageVerticalFlip"]:
+            frame = cv2.flip(frame, 0)
+
         ret, buffer = cv2.imencode('.jpg', frame)
         frame = buffer.tobytes()
         yield (b'--frame\r\n'
@@ -99,7 +113,6 @@ def video_feed():
 
 @app.route('/list_cameras')
 def list_cameras():
-    import cv2
     available = []
     for idx in range(5):
         cap = cv2.VideoCapture(idx)
@@ -107,6 +120,22 @@ def list_cameras():
             available.append(idx)
             cap.release()
     return jsonify({'cameras': available})
+
+
+@app.route('/set_drone_settings', methods=['POST'])
+def set_drone_settings():
+    data = request.get_json()
+    with open(json_file, "r+", encoding="utf-8") as f:
+        j = json.load(f)
+        j["droneSettings"]["minimumCruisingAltitude"] = data.get("minimumCruisingAltitude", "OFF")
+        j["droneSettings"]["lowAltitudeWarning"] = data.get("lowAltitudeWarning", "OFF")
+        j["droneSettings"]["imageHorizontalFlip"] = bool(data.get("imageHorizontalFlip", False))
+        j["droneSettings"]["imageVerticalFlip"] = bool(data.get("imageVerticalFlip", False))
+        f.seek(0)
+        json.dump(j, f, indent=2)
+        f.truncate()
+    return jsonify({'status': 'ok'})
+
 
 if __name__ == "__main__":
     set_camera(get_camera_index())
