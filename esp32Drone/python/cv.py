@@ -140,3 +140,22 @@ def set_drone_settings():
 if __name__ == "__main__":
     set_camera(get_camera_index())
     app.run(host="0.0.0.0", port=5000, debug=True)
+
+
+
+# Art by Blazej Kozlowski
+#        _                        
+#        \`*-.                    
+#         )  _`-.                 
+#        .  : `. .                
+#        : _   '  \               
+#        ; *` _.   `*-._          
+#        `-.-'          `-.       
+#          ;       `       `.     
+#          :.       .        \    
+#          . \  .   :   .-'   .   
+#          '  `+.;  ;  '      :   
+#          :  '  |    ;       ;-. 
+#          ; '   : :`-:     _.`* ;
+# [bug] .*' /  .*' ; .*`- +'  `*' 
+#       `*-*   `*-*  `*-*'
