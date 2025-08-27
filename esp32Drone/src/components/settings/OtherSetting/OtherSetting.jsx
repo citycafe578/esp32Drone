@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import './OtherSetting.css';
 import '../JoystickSetting/JoystickSetting.css';
+import '../../../App.css';
 
 const OtherSetting = () => {
   const [imageTransmission, setImageTransmission] = useState('');
