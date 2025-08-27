@@ -16,5 +16,9 @@
   "otherSettings": {
     "imageTransmission": "0",
     "reciver": "null"
+  },
+  "droneSettings": {
+    "minimumCruisingAltitude": "OFF",
+    "lowAltitudeWarning": "OFF"
   }
 }
