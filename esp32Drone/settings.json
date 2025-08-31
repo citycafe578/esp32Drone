@@ -14,8 +14,9 @@
     "emergency stop": null
   },
   "otherSettings": {
-    "imageTransmission": "2",
-    "reciver": "null"
+    "imageTransmission": "0",
+    "reciver": "null",
+    "LAWSE": "1"
   },
   "droneSettings": {
     "minimumCruisingAltitude": "OFF",

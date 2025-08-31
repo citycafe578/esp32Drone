@@ -1,13 +1,53 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import './OtherSetting.css';
 import '../JoystickSetting/JoystickSetting.css';
 import '../../../App.css';
 
 const OtherSetting = () => {
-  const [imageTransmission, setImageTransmission] = useState('');
-  const [reciver, setReciver] = useState('');
+
+  const getInitOtherSettings = () => {
+    const local = localStorage.getItem("otherSettings");
+    if (local) {
+      const parsed = JSON.parse(local);
+      return {
+        imageTransmission: parsed.imageTransmission || "",
+        reciver: parsed.reciver || "",
+        LAWSE: parsed.LAWSE || "1"
+      };
+    }
+
+    return {
+      imageTransmission: "",
+      reciver: "",
+      LAWSE: "1"
+    }
+  };
+
+  const initSettings = getInitOtherSettings();
+
+  const [imageTransmission, setImageTransmission] = useState(initSettings.imageTransmission);
+  const [reciver, setReciver] = useState(initSettings.reciver);
   const [cameras, setCameras] = useState([]);
   const [cameraChecked, setCameraChecked] = useState(false);
+  const [LAWSE, setLAWSE] = useState(initSettings.LAWSE);
+
+  useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem("otherSettings"));
+    if (saved) {
+      setImageTransmission(saved.imageTransmission || "");
+      setReciver(saved.reciver || "");
+      setLAWSE(saved.LAWSE || "1");
+    }
+  }, []);
+
+  useEffect(() => {
+    const settings = {
+      imageTransmission,
+      reciver,
+      LAWSE
+    };
+    localStorage.setItem("otherSettings", JSON.stringify(settings));
+  }, [imageTransmission, reciver, LAWSE]);
 
 
   useEffect(() => {
@@ -76,6 +116,22 @@ const OtherSetting = () => {
             ))}
           </select>
         </div>
+
+        <div className='settings'>
+          <h1 style={{ justifyContent: 'left' }}>Low Altitude Warning Sound Effect</h1> {/* LAWSE */}
+          <select
+            value={LAWSE}
+            onChange={(e) => setLAWSE(e.target.value)}
+            style={{ justifyContent: 'right' }}
+          >
+            <option>1</option>
+            <option>2</option>
+            <option>3</option>
+            <option>4</option>
+            <option>5</option>
+
+          </select>
+        </div>
       </div>
       {/* 右邊 */}
       <div className='column_bar'>
@@ -89,6 +145,17 @@ const OtherSetting = () => {
           </select>
         </div>
       </div>
+
+      {/* <div className='settings'>
+          <h1>Image Horizontal Flip</h1>
+          <select
+            value={imageHorizontalFlip}
+            onChange={(e) => setImageHorizontalFlip(e.target.value)}
+          >
+            <option>False</option>
+            <option>True</option>
+          </select>
+        </div> */}
     </div>
   );
 };
