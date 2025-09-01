@@ -16,7 +16,9 @@
   "otherSettings": {
     "imageTransmission": "0",
     "reciver": "null",
-    "LAWSE": "1"
+    "LAWSE": "1",
+    "sharpen": "0%",
+    "grayscale": "0%"
   },
   "droneSettings": {
     "minimumCruisingAltitude": "OFF",

@@ -12,14 +12,18 @@ const OtherSetting = () => {
       return {
         imageTransmission: parsed.imageTransmission || "",
         reciver: parsed.reciver || "",
-        LAWSE: parsed.LAWSE || "1"
+        LAWSE: parsed.LAWSE || "1",
+        sharpen: parsed.sharpen || "0%",
+        grayscale: parsed.grayscale || "0%"
       };
     }
 
     return {
       imageTransmission: "",
       reciver: "",
-      LAWSE: "1"
+      LAWSE: "1",
+      sharpen: "0%",
+      grayscale: "0%"
     }
   };
 
@@ -30,6 +34,8 @@ const OtherSetting = () => {
   const [cameras, setCameras] = useState([]);
   const [cameraChecked, setCameraChecked] = useState(false);
   const [LAWSE, setLAWSE] = useState(initSettings.LAWSE);
+  const [sharpen, setSharpen] = useState(initSettings.sharpen);
+  const [grayscale, setGrayscale] = useState(initSettings.grayscale);
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("otherSettings"));
@@ -37,6 +43,8 @@ const OtherSetting = () => {
       setImageTransmission(saved.imageTransmission || "");
       setReciver(saved.reciver || "");
       setLAWSE(saved.LAWSE || "1");
+      setSharpen(saved.sharpen || "0%")
+      setGrayscale(saved.grayscale || "0%");
     }
   }, []);
 
@@ -44,10 +52,12 @@ const OtherSetting = () => {
     const settings = {
       imageTransmission,
       reciver,
-      LAWSE
+      LAWSE,
+      sharpen,
+      grayscale
     };
     localStorage.setItem("otherSettings", JSON.stringify(settings));
-  }, [imageTransmission, reciver, LAWSE]);
+  }, [imageTransmission, reciver, LAWSE, sharpen, grayscale]);
 
 
   useEffect(() => {
@@ -98,7 +108,7 @@ const OtherSetting = () => {
   };
 
   return (
-    <div style={{ height: '63vh', width: '100%', backgroundColor: 'green', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ height: '63vh', width: '100%', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
       {/* 左邊 */}
       <div className='column_bar'>
         <div className='settings'>
@@ -124,12 +134,25 @@ const OtherSetting = () => {
             onChange={(e) => setLAWSE(e.target.value)}
             style={{ justifyContent: 'right' }}
           >
-            <option>1</option>
-            <option>2</option>
-            <option>3</option>
-            <option>4</option>
-            <option>5</option>
+            <option>Sound Effect 1</option>
+            <option>Sound Effect 2</option>
+            <option>Sound Effect 3</option>
+            <option>Sound Effect 4</option>
+            <option>Sound Effect 5</option>
+          </select>
+        </div>
 
+        <div className='settings'>
+          <h1>Sharpen</h1>
+          <select
+            value={sharpen}
+            onChange={(e) => setSharpen(e.target.value)}
+          >
+            <option>0%</option>
+            <option>25%</option>
+            <option>50%</option>
+            <option>75%</option>
+            <option>100%</option>
           </select>
         </div>
       </div>
@@ -144,18 +167,21 @@ const OtherSetting = () => {
             <option value="">Reciver:</option>
           </select>
         </div>
-      </div>
 
-      {/* <div className='settings'>
-          <h1>Image Horizontal Flip</h1>
+        <div className='settings'>
+          <h1>Grayscale</h1>
           <select
-            value={imageHorizontalFlip}
-            onChange={(e) => setImageHorizontalFlip(e.target.value)}
+            value={grayscale}
+            onChange={(e) => setGrayscale(e.target.value)}
           >
-            <option>False</option>
-            <option>True</option>
+            <option>0%</option>
+            <option>25%</option>
+            <option>50%</option>
+            <option>75%</option>
+            <option>100%</option>
           </select>
-        </div> */}
+        </div>
+      </div>
     </div>
   );
 };

@@ -4,6 +4,7 @@ import cv2
 import json
 import time
 import os
+import numpy as np
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
@@ -95,11 +96,27 @@ def generate_frames():
 
         with open(json_file, "r", encoding="utf-8") as f:
             data = json.load(f)
-
         if data["droneSettings"]["imageHorizontalFlip"]:
             frame = cv2.flip(frame, 1)
         if data["droneSettings"]["imageVerticalFlip"]:
             frame = cv2.flip(frame, 0)
+        sharpen = int(data["otherSettings"].get("sharpen", "0").replace('%', ''))
+        grayscale = int(data["otherSettings"].get("grayscale", "0").replace('%', ''))
+        if sharpen > 0:
+            k = 10 + (sharpen / 10.0)
+            kernel = np.array([
+                [0, -1, 0],
+                [-1, k, -1],
+                [0, -1, 0]
+            ], dtype=np.float32)
+            frame = cv2.filter2D(frame, -1, kernel)
+
+        if grayscale > 0:
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            gray_bgr = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+            alpha = grayscale / 100.0
+            frame = cv2.addWeighted(frame, 1 - alpha, gray_bgr, alpha, 0)
+
 
         ret, buffer = cv2.imencode('.jpg', frame)
         frame = buffer.tobytes()
