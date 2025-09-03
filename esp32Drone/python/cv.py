@@ -41,7 +41,7 @@ def set_camera_route():
     idx = int(data.get('imageTransmission', 0))
     with open(json_file, "r+", encoding="utf-8") as f:
         j = json.load(f)
-        j["otherSettings"]["imageTransmission"] = str(idx)
+        j["otherSettings"]["imageTransmission"] = str(int(data.get('imageTransmission', 0)))
         f.seek(0)
         json.dump(j, f, indent=2)
         f.truncate()
@@ -100,8 +100,8 @@ def generate_frames():
             frame = cv2.flip(frame, 1)
         if data["droneSettings"]["imageVerticalFlip"]:
             frame = cv2.flip(frame, 0)
-        sharpen = int(data["otherSettings"].get("sharpen", "0").replace('%', ''))
-        grayscale = int(data["otherSettings"].get("grayscale", "0").replace('%', ''))
+        sharpen = int(data["otherSettings"].get("sharpen", "0"))
+        grayscale = int(data["otherSettings"].get("grayscale", "1"))
         if sharpen > 0:
             k = 10 + (sharpen / 10.0)
             kernel = np.array([
@@ -112,10 +112,13 @@ def generate_frames():
             frame = cv2.filter2D(frame, -1, kernel)
 
         if grayscale > 0:
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            gray_bgr = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
-            alpha = grayscale / 100.0
-            frame = cv2.addWeighted(frame, 1 - alpha, gray_bgr, alpha, 0)
+            print("grayscale changed")
+            # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            # gray_bgr = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+            # alpha = grayscale / 100.0
+            # frame = cv2.addWeighted(frame, 1 - alpha, gray_bgr, alpha, 0)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        
 
 
         ret, buffer = cv2.imencode('.jpg', frame)

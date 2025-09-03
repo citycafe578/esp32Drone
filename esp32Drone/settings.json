@@ -17,13 +17,13 @@
     "imageTransmission": "0",
     "reciver": "null",
     "LAWSE": "1",
-    "sharpen": "0%",
-    "grayscale": "0%"
+    "sharpen": "0",
+    "grayscale": "0"
   },
   "droneSettings": {
     "minimumCruisingAltitude": "OFF",
-    "lowAltitudeWarning": "100",
-    "imageHorizontalFlip": false,
+    "lowAltitudeWarning": "OFF",
+    "imageHorizontalFlip": true,
     "imageVerticalFlip": false
   }
 }

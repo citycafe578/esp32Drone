@@ -12,18 +12,18 @@ const OtherSetting = () => {
       return {
         imageTransmission: parsed.imageTransmission || "",
         reciver: parsed.reciver || "",
-        LAWSE: parsed.LAWSE || "1",
-        sharpen: parsed.sharpen || "0%",
-        grayscale: parsed.grayscale || "0%"
+        LAWSE: parsed.LAWSE || "",
+        sharpen: parsed.sharpen || "",
+        grayscale: parsed.grayscale || ""
       };
     }
 
     return {
       imageTransmission: "",
       reciver: "",
-      LAWSE: "1",
-      sharpen: "0%",
-      grayscale: "0%"
+      LAWSE: "",
+      sharpen: "",
+      grayscale: ""
     }
   };
 
@@ -42,9 +42,9 @@ const OtherSetting = () => {
     if (saved) {
       setImageTransmission(saved.imageTransmission || "");
       setReciver(saved.reciver || "");
-      setLAWSE(saved.LAWSE || "1");
-      setSharpen(saved.sharpen || "0%")
-      setGrayscale(saved.grayscale || "0%");
+      setLAWSE(saved.LAWSE || "");
+      setSharpen(saved.sharpen || "")
+      setGrayscale(saved.grayscale || "");
     }
   }, []);
 
@@ -148,11 +148,11 @@ const OtherSetting = () => {
             value={sharpen}
             onChange={(e) => setSharpen(e.target.value)}
           >
-            <option>0%</option>
-            <option>25%</option>
-            <option>50%</option>
-            <option>75%</option>
-            <option>100%</option>
+            <option value = {0}>0</option>
+            <option value = {25}>25</option>
+            <option value = {50}>50</option>
+            <option value = {75}>75</option>
+            <option value = {100}>100</option>
           </select>
         </div>
       </div>
@@ -174,11 +174,11 @@ const OtherSetting = () => {
             value={grayscale}
             onChange={(e) => setGrayscale(e.target.value)}
           >
-            <option>0%</option>
-            <option>25%</option>
-            <option>50%</option>
-            <option>75%</option>
-            <option>100%</option>
+            <option value = {0}>0</option>
+            <option value = {25}>25</option>
+            <option value = {50}>50</option>
+            <option value = {75}>75</option>
+            <option value = {100}>100</option>
           </select>
         </div>
       </div>
