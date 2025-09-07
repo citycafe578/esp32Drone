@@ -38,6 +38,7 @@ def set_camera(idx):
 @app.route('/set_camera', methods=['POST'])
 def set_camera_route():
     data = request.get_json()
+    print(data)
     idx = int(data.get('imageTransmission', 0))
     with open(json_file, "r+", encoding="utf-8") as f:
         j = json.load(f)
@@ -113,11 +114,10 @@ def generate_frames():
 
         if grayscale > 0:
             print("grayscale changed")
-            # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            # gray_bgr = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
-            # alpha = grayscale / 100.0
-            # frame = cv2.addWeighted(frame, 1 - alpha, gray_bgr, alpha, 0)
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            gray_bgr = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+            alpha = grayscale / 100.0
+            frame = cv2.addWeighted(frame, 1 - alpha, gray_bgr, alpha, 0)
         
 
 
