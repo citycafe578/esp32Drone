@@ -16,6 +16,7 @@
   "otherSettings": {
     "imageTransmission": "0",
     "reciver": "null",
+    "transmissionPower": "Low",
     "LAWSE": "1",
     "sharpen": "0",
     "grayscale": "0"
@@ -23,7 +24,10 @@
   "droneSettings": {
     "minimumCruisingAltitude": "OFF",
     "lowAltitudeWarning": "OFF",
-    "imageHorizontalFlip": true,
-    "imageVerticalFlip": false
+    "imageHorizontalFlip": false,
+    "imageVerticalFlip": false,
+    "maximumCruisingAltitude": "OFF",
+    "geoFenceRadius": "False",
+    "autoReturnHome": "False"
   }
 }

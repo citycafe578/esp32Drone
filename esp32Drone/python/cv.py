@@ -94,7 +94,8 @@ def generate_frames():
             print(f"[WARN] Can't grab frame from camera index {last_idx}")
             time.sleep(0.1)
             continue
-
+        
+        # 沒修好，之後再修
         with open(json_file, "r", encoding="utf-8") as f:
             data = json.load(f)
         if data["droneSettings"]["imageHorizontalFlip"]:

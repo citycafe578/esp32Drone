@@ -12,6 +12,7 @@ const OtherSetting = () => {
       return {
         imageTransmission: parsed.imageTransmission || "",
         reciver: parsed.reciver || "",
+        transmissionPower: parsed.transmissionPower || "",
         LAWSE: parsed.LAWSE || "",
         sharpen: parsed.sharpen || "",
         grayscale: parsed.grayscale || ""
@@ -21,6 +22,7 @@ const OtherSetting = () => {
     return {
       imageTransmission: "",
       reciver: "",
+      transmissionPower: "",
       LAWSE: "",
       sharpen: "",
       grayscale: ""
@@ -31,6 +33,7 @@ const OtherSetting = () => {
 
   const [imageTransmission, setImageTransmission] = useState(initSettings.imageTransmission);
   const [reciver, setReciver] = useState(initSettings.reciver);
+  const [transmissionPower, setTransmissionPower] = useState(initSettings.transmissionPower);
   const [cameras, setCameras] = useState([]);
   const [cameraChecked, setCameraChecked] = useState(false);
   const [LAWSE, setLAWSE] = useState(initSettings.LAWSE);
@@ -42,6 +45,7 @@ const OtherSetting = () => {
     if (saved) {
       setImageTransmission(saved.imageTransmission || "");
       setReciver(saved.reciver || "");
+      setTransmissionPower(saved.transmissionPower || "");
       setLAWSE(saved.LAWSE || "");
       setSharpen(saved.sharpen || "")
       setGrayscale(saved.grayscale || "");
@@ -52,12 +56,13 @@ const OtherSetting = () => {
     const settings = {
       imageTransmission,
       reciver,
+      transmissionPower,
       LAWSE,
       sharpen,
       grayscale
     };
     localStorage.setItem("otherSettings", JSON.stringify(settings));
-  }, [imageTransmission, reciver, LAWSE, sharpen, grayscale]);
+  }, [imageTransmission, reciver,transmissionPower, LAWSE, sharpen, grayscale]);
 
 
   useEffect(() => {
@@ -143,16 +148,16 @@ const OtherSetting = () => {
         </div>
 
         <div className='settings'>
-          <h1>Sharpen</h1>
+          <h1>Image Sharpen</h1>
           <select
             value={sharpen}
             onChange={(e) => setSharpen(e.target.value)}
           >
-            <option value = {0}>0</option>
-            <option value = {25}>25</option>
-            <option value = {50}>50</option>
-            <option value = {75}>75</option>
-            <option value = {100}>100</option>
+            <option value = {0}>0%</option>
+            <option value = {25}>25%</option>
+            <option value = {50}>50%</option>
+            <option value = {75}>75%</option>
+            <option value = {100}>100%</option>
           </select>
         </div>
       </div>
@@ -169,16 +174,27 @@ const OtherSetting = () => {
         </div>
 
         <div className='settings'>
-          <h1>Grayscale</h1>
+            <h1 style ={{justifyContent: 'left'}}>Transmission Power</h1>
+            <select
+              value = {transmissionPower}
+              onChange={(e) => setTransmissionPower(e.target.value)}
+            >
+              <option>Low</option>
+              <option>High</option>
+            </select>
+        </div>
+
+        <div className='settings'>
+          <h1>Image Grayscale</h1>
           <select
             value={grayscale}
             onChange={(e) => setGrayscale(e.target.value)}
           >
-            <option value = {0}>0</option>
-            <option value = {25}>25</option>
-            <option value = {50}>50</option>
-            <option value = {75}>75</option>
-            <option value = {100}>100</option>
+            <option value = {0}>0%</option>
+            <option value = {25}>25%</option>
+            <option value = {50}>50%</option>
+            <option value = {75}>75%</option>
+            <option value = {100}>100%</option>
           </select>
         </div>
       </div>
