@@ -5,6 +5,7 @@ import json
 import time
 import os
 import numpy as np
+import serial.tools.list_ports
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
@@ -156,6 +157,18 @@ def set_drone_settings():
         json.dump(j, f, indent=2)
         f.truncate()
     return jsonify({'status': 'ok'})
+
+@app.route('/get_ports', methods=['GET'])
+def get_ports():
+    devices = []
+    ports = serial.tools.list_ports.comports()
+    for port in ports:
+        devices.append({
+            "device": port.device,
+            "name": port.description
+        })
+    return jsonify({"ports": devices})
+    
 
 
 if __name__ == "__main__":

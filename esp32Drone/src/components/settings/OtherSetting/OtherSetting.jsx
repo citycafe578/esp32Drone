@@ -30,12 +30,14 @@ const OtherSetting = () => {
   };
 
   const initSettings = getInitOtherSettings();
-
   const [imageTransmission, setImageTransmission] = useState(initSettings.imageTransmission);
-  const [reciver, setReciver] = useState(initSettings.reciver);
-  const [transmissionPower, setTransmissionPower] = useState(initSettings.transmissionPower);
-  const [cameras, setCameras] = useState([]);
   const [cameraChecked, setCameraChecked] = useState(false);
+  const [cameras, setCameras] = useState([]);
+
+  const [reciver, setReciver] = useState(initSettings.reciver);
+  const [ports, setPorts] = useState([]);
+
+  const [transmissionPower, setTransmissionPower] = useState(initSettings.transmissionPower);
   const [LAWSE, setLAWSE] = useState(initSettings.LAWSE);
   const [sharpen, setSharpen] = useState(initSettings.sharpen);
   const [grayscale, setGrayscale] = useState(initSettings.grayscale);
@@ -62,7 +64,7 @@ const OtherSetting = () => {
       grayscale
     };
     localStorage.setItem("otherSettings", JSON.stringify(settings));
-  }, [imageTransmission, reciver,transmissionPower, LAWSE, sharpen, grayscale]);
+  }, [imageTransmission, reciver, transmissionPower, LAWSE, sharpen, grayscale]);
 
 
   useEffect(() => {
@@ -95,6 +97,15 @@ const OtherSetting = () => {
     }
   }, [cameraChecked]);
 
+  useEffect(() => {
+    fetch('http://localhost:5000/get_ports')
+      .then(res => res.json())
+      .then(data => {
+        setPorts(data.ports);
+      })
+      .catch(err => console.error('error fetching ports:, err'));
+  }, [])
+
   const handleCameraChange = (e) => {
     const idx = e.target.value;
     setImageTransmission(idx);
@@ -105,12 +116,10 @@ const OtherSetting = () => {
     });
   };
 
-
   const handleReciverChange = (e) => {
-    const val = e.target.value;
-    setReciver(val);
+    setReciver(e.target.value);
+  }
 
-  };
 
   return (
     <div style={{ height: '63vh', width: '100%', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
@@ -153,11 +162,11 @@ const OtherSetting = () => {
             value={sharpen}
             onChange={(e) => setSharpen(e.target.value)}
           >
-            <option value = {0}>0%</option>
-            <option value = {25}>25%</option>
-            <option value = {50}>50%</option>
-            <option value = {75}>75%</option>
-            <option value = {100}>100%</option>
+            <option value={0}>0%</option>
+            <option value={25}>25%</option>
+            <option value={50}>50%</option>
+            <option value={75}>75%</option>
+            <option value={100}>100%</option>
           </select>
         </div>
       </div>
@@ -170,18 +179,23 @@ const OtherSetting = () => {
             onChange={handleReciverChange}
           >
             <option value="">Reciver:</option>
+            {ports.map((port, idx) => (
+              <option key={idx} value={port.device}>
+                {port.device} - {port.name}
+              </option>
+            ))}
           </select>
         </div>
 
         <div className='settings'>
-            <h1 style ={{justifyContent: 'left'}}>Transmission Power</h1>
-            <select
-              value = {transmissionPower}
-              onChange={(e) => setTransmissionPower(e.target.value)}
-            >
-              <option>Low</option>
-              <option>High</option>
-            </select>
+          <h1 style={{ justifyContent: 'left' }}>Transmission Power</h1>
+          <select
+            value={transmissionPower}
+            onChange={(e) => setTransmissionPower(e.target.value)}
+          >
+            <option>Low</option>
+            <option>High</option>
+          </select>
         </div>
 
         <div className='settings'>
@@ -190,11 +204,11 @@ const OtherSetting = () => {
             value={grayscale}
             onChange={(e) => setGrayscale(e.target.value)}
           >
-            <option value = {0}>0%</option>
-            <option value = {25}>25%</option>
-            <option value = {50}>50%</option>
-            <option value = {75}>75%</option>
-            <option value = {100}>100%</option>
+            <option value={0}>0%</option>
+            <option value={25}>25%</option>
+            <option value={50}>50%</option>
+            <option value={75}>75%</option>
+            <option value={100}>100%</option>
           </select>
         </div>
       </div>
