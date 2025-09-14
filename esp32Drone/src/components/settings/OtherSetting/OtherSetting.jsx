@@ -1,10 +1,9 @@
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect } from 'react';
 import './OtherSetting.css';
 import '../JoystickSetting/JoystickSetting.css';
 import '../../../App.css';
 
 const OtherSetting = () => {
-
   const getInitOtherSettings = () => {
     const local = localStorage.getItem("otherSettings");
     if (local) {
@@ -18,7 +17,6 @@ const OtherSetting = () => {
         grayscale: parsed.grayscale || ""
       };
     }
-
     return {
       imageTransmission: "",
       reciver: "",
@@ -31,12 +29,9 @@ const OtherSetting = () => {
 
   const initSettings = getInitOtherSettings();
   const [imageTransmission, setImageTransmission] = useState(initSettings.imageTransmission);
-  const [cameraChecked, setCameraChecked] = useState(false);
   const [cameras, setCameras] = useState([]);
-
   const [reciver, setReciver] = useState(initSettings.reciver);
   const [ports, setPorts] = useState([]);
-
   const [transmissionPower, setTransmissionPower] = useState(initSettings.transmissionPower);
   const [LAWSE, setLAWSE] = useState(initSettings.LAWSE);
   const [sharpen, setSharpen] = useState(initSettings.sharpen);
@@ -66,36 +61,14 @@ const OtherSetting = () => {
     localStorage.setItem("otherSettings", JSON.stringify(settings));
   }, [imageTransmission, reciver, transmissionPower, LAWSE, sharpen, grayscale]);
 
-
   useEffect(() => {
-    let stream;
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(s => {
-        stream = s;
-        return navigator.mediaDevices.enumerateDevices();
+    fetch('http://localhost:5000/list_cameras')
+      .then(res => res.json())
+      .then(data => {
+        setCameras(data.cameras);
       })
-      .then(devices => {
-        const videoInputs = devices.filter(device => device.kind === 'videoinput');
-        setCameras(videoInputs);
-        setCameraChecked(true);
-        if (stream) {
-          stream.getTracks().forEach(track => track.stop());
-        }
-      })
-      .catch(err => {
-        console.error('No device:', err);
-        setCameraChecked(true);
-      });
+      .catch(err => console.error('Error fetching cameras:', err));
   }, []);
-
-  useEffect(() => {
-    if (cameraChecked) {
-      fetch('http://localhost:5000/pause_camera', { method: 'POST' });
-      return () => {
-        fetch('http://localhost:5000/resume_camera', { method: 'POST' });
-      };
-    }
-  }, [cameraChecked]);
 
   useEffect(() => {
     fetch('http://localhost:5000/get_ports')
@@ -103,8 +76,8 @@ const OtherSetting = () => {
       .then(data => {
         setPorts(data.ports);
       })
-      .catch(err => console.error('error fetching ports:, err'));
-  }, [])
+      .catch(err => console.error('Error fetching ports:', err));
+  }, []);
 
   const handleCameraChange = (e) => {
     const idx = e.target.value;
@@ -118,8 +91,7 @@ const OtherSetting = () => {
 
   const handleReciverChange = (e) => {
     setReciver(e.target.value);
-  }
-
+  };
 
   return (
     <div style={{ height: '63vh', width: '100%', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
@@ -132,17 +104,17 @@ const OtherSetting = () => {
             onChange={handleCameraChange}
             style={{ justifyContent: 'right' }}
           >
-            <option value="">Image Transmission:</option>
-            {cameras.map((cam, idx) => (
-              <option key={cam.deviceId} value={idx}>
-                {`[${idx}] `}{cam.label || `Camera ${cam.deviceId}`}
+            <option value="">Select Camera:</option>
+            {cameras.map((idx) => (
+              <option key={idx} value={idx}>
+                Camera {idx}
               </option>
             ))}
           </select>
         </div>
 
         <div className='settings'>
-          <h1 style={{ justifyContent: 'left' }}>Low Altitude Warning Sound Effect</h1> {/* LAWSE */}
+          <h1 style={{ justifyContent: 'left' }}>Low Altitude Warning Sound Effect</h1>
           <select
             value={LAWSE}
             onChange={(e) => setLAWSE(e.target.value)}
@@ -170,6 +142,7 @@ const OtherSetting = () => {
           </select>
         </div>
       </div>
+
       {/* 右邊 */}
       <div className='column_bar'>
         <div className='settings'>
@@ -215,4 +188,5 @@ const OtherSetting = () => {
     </div>
   );
 };
+
 export default OtherSetting;

@@ -14,7 +14,7 @@
     "emergency stop": null
   },
   "otherSettings": {
-    "imageTransmission": "0",
+    "imageTransmission": "1",
     "reciver": "null",
     "transmissionPower": "Low",
     "LAWSE": "1",
