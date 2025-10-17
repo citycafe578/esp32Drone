@@ -145,8 +145,8 @@ const App = () => {
                   : settingEntries.find(e => e.key === settingPage)?.title || 'Settings'}
               </h2>
               {settingPage === ''
-                ? <button onClick={() => setShowSetting(false)}>close</button>
-                : <button onClick={() => setSettingPage('')}>back</button>
+                ? <button onClick={() => setShowSetting(false)} style={{backgroundColor: 'transparent'}}><img src='/close.png' alt="設定" className='close_btn_pic'></img></button>
+                : <button onClick={() => setSettingPage('')} style={{backgroundColor: 'transparent'}} ><img src='/close.png' alt="設定" className='close_btn_pic'></img></button>
               }
             </div>
             {renderSettingContent()}

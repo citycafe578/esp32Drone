@@ -60,11 +60,16 @@ body {
 }
 
 .column_bar{
-    width: 50%;
-    height: 100%;
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+  width: 50%;
+  height: 100%;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.close_btn_pic{
+  width: 35px;
+  height: 35px;
 }

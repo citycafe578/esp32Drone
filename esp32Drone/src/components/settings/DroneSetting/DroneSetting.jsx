@@ -103,7 +103,6 @@ const DroneSetting = () => {
       style={{
         height: '63vh',
         width: '100%',
-        backgroundColor: 'green',
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
