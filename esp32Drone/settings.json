@@ -14,7 +14,7 @@
     "emergency stop": null
   },
   "otherSettings": {
-    "imageTransmission": "1",
+    "imageTransmission": "0",
     "reciver": "null",
     "transmissionPower": "Low",
     "LAWSE": "1",
@@ -24,7 +24,7 @@
   "droneSettings": {
     "minimumCruisingAltitude": "OFF",
     "lowAltitudeWarning": "OFF",
-    "imageHorizontalFlip": false,
+    "imageHorizontalFlip": true,
     "imageVerticalFlip": false,
     "maximumCruisingAltitude": "OFF",
     "geoFenceRadius": "False",

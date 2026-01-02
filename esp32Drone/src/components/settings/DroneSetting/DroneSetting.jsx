@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import './DroneSetting.css';
+//import './DroneSetting.css';
 import '../JoystickSetting/JoystickSetting.css';
 import '../../../App.css';
 
@@ -11,8 +11,8 @@ const DroneSetting = () => {
       return {
         minimumCruisingAltitude: parsed.minimumCruisingAltitude || "OFF",
         lowAltitudeWarning: parsed.lowAltitudeWarning || "OFF",
-        imageHorizontalFlip: String(parsed.imageHorizontalFlip) === "true" ? "True" : "False",
-        imageVerticalFlip: String(parsed.imageVerticalFlip) === "true" ? "True" : "False",
+        imageHorizontalFlip: parsed.imageHorizontalFlip || "False",
+        imageVerticalFlip: parsed.imageVerticalFlip || "False",
         maximumCruisingAltitude: parsed.maximumCruisingAltitude || "",
         geoFenceRadius: parsed.geoFenceRadius || "",
         autoReturnHome: parsed.autoReturnHome || "False",
