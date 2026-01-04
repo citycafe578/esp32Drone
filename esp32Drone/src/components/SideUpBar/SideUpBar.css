@@ -44,7 +44,7 @@
   flex-direction: column; 
 }
 
-.overlay {
+.overlay{
   position: fixed;
   top: 0;
   left: 0;
@@ -54,7 +54,7 @@
   z-index: 998;
 }
 
-#auto_pilot_map {
+#auto_pilot_map{
   width: 70%;
   max-width: 70%;
   height: 95%;
@@ -68,6 +68,8 @@
 }
 
 #waypoint_setting{
+  display: flex;
+  flex-direction: column;
   width: 30%;
   max-width: 30%;
   height: 95%;
@@ -80,23 +82,12 @@
   border-radius: 10px;
 }
 
-.save_and_cancel_btns_bar {
-  display: flex;
-  justify-content: space-evenly;
-  width: 50%;
-  margin-top: 100%;
-}
-
-.save_and_cancel_btns {
+#save_and_cancel_btns {
   flex: 1;
   margin: 0 8px;
   padding: 10px 0;
-  border: none;
+  border: 5%;
   border-radius: 10px;
   background: rgb(174, 173, 173);
-}
-
-.save_and_cancel_btns:hover {
-  background: linear-gradient(90deg, #38e6c9 0%, #4f8cff 100%);
-  transform: translateY(-2px) scale(1.04);
+  width: 95%;
 }

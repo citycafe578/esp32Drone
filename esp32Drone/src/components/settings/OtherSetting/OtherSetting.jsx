@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import './OtherSetting.css';
+import { useState, useEffect } from 'react';  
 import '../JoystickSetting/JoystickSetting.css';
 import '../../../App.css';
 
