@@ -1,12 +1,26 @@
-import { useState, useEffect } from 'react';  
-import '../JoystickSetting/JoystickSetting.css';
-import '../../../App.css';
+import { useState, useEffect, FC, ChangeEvent } from 'react'
+import '../JoystickSetting/JoystickSetting.css'
+import '../../../App.css'
 
-const OtherSetting = () => {
-  const getInitOtherSettings = () => {
-    const local = localStorage.getItem("otherSettings");
+interface OtherSettings {
+  imageTransmission: string
+  reciver: string
+  transmissionPower: string
+  LAWSE: string
+  sharpen: string
+  grayscale: string
+}
+
+interface Port {
+  device: string
+  name: string
+}
+
+const OtherSetting: FC = () => {
+  const getInitOtherSettings = (): OtherSettings => {
+    const local = localStorage.getItem("otherSettings")
     if (local) {
-      const parsed = JSON.parse(local);
+      const parsed = JSON.parse(local) as Partial<OtherSettings>
       return {
         imageTransmission: parsed.imageTransmission || "",
         reciver: parsed.reciver || "",
@@ -14,7 +28,7 @@ const OtherSetting = () => {
         LAWSE: parsed.LAWSE || "",
         sharpen: parsed.sharpen || "",
         grayscale: parsed.grayscale || ""
-      };
+      }
     }
     return {
       imageTransmission: "",
@@ -24,73 +38,74 @@ const OtherSetting = () => {
       sharpen: "",
       grayscale: ""
     }
-  };
+  }
 
-  const initSettings = getInitOtherSettings();
-  const [imageTransmission, setImageTransmission] = useState(initSettings.imageTransmission);
-  const [cameras, setCameras] = useState([]);
-  const [reciver, setReciver] = useState(initSettings.reciver);
-  const [ports, setPorts] = useState([]);
-  const [transmissionPower, setTransmissionPower] = useState(initSettings.transmissionPower);
-  const [LAWSE, setLAWSE] = useState(initSettings.LAWSE);
-  const [sharpen, setSharpen] = useState(initSettings.sharpen);
-  const [grayscale, setGrayscale] = useState(initSettings.grayscale);
+  const initSettings = getInitOtherSettings()
+  const [imageTransmission, setImageTransmission] = useState<string>(initSettings.imageTransmission)
+  const [cameras, setCameras] = useState<string[]>([])
+  const [reciver, setReciver] = useState<string>(initSettings.reciver)
+  const [ports, setPorts] = useState<Port[]>([])
+  const [transmissionPower, setTransmissionPower] = useState<string>(initSettings.transmissionPower)
+  const [LAWSE, setLAWSE] = useState<string>(initSettings.LAWSE)
+  const [sharpen, setSharpen] = useState<string>(initSettings.sharpen)
+  const [grayscale, setGrayscale] = useState<string>(initSettings.grayscale)
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("otherSettings"));
+    const saved = localStorage.getItem("otherSettings")
     if (saved) {
-      setImageTransmission(saved.imageTransmission || "");
-      setReciver(saved.reciver || "");
-      setTransmissionPower(saved.transmissionPower || "");
-      setLAWSE(saved.LAWSE || "");
-      setSharpen(saved.sharpen || "")
-      setGrayscale(saved.grayscale || "");
+      const parsedSaved = JSON.parse(saved) as Partial<OtherSettings>
+      setImageTransmission(parsedSaved.imageTransmission || "")
+      setReciver(parsedSaved.reciver || "")
+      setTransmissionPower(parsedSaved.transmissionPower || "")
+      setLAWSE(parsedSaved.LAWSE || "")
+      setSharpen(parsedSaved.sharpen || "")
+      setGrayscale(parsedSaved.grayscale || "")
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
-    const settings = {
+    const settings: OtherSettings = {
       imageTransmission,
       reciver,
       transmissionPower,
       LAWSE,
       sharpen,
       grayscale
-    };
-    localStorage.setItem("otherSettings", JSON.stringify(settings));
-  }, [imageTransmission, reciver, transmissionPower, LAWSE, sharpen, grayscale]);
+    }
+    localStorage.setItem("otherSettings", JSON.stringify(settings))
+  }, [imageTransmission, reciver, transmissionPower, LAWSE, sharpen, grayscale])
 
   useEffect(() => {
     fetch('http://localhost:5000/list_cameras')
       .then(res => res.json())
-      .then(data => {
-        setCameras(data.cameras);
+      .then((data: { cameras: string[] }) => {
+        setCameras(data.cameras)
       })
-      .catch(err => console.error('Error fetching cameras:', err));
-  }, []);
+      .catch((err: Error) => console.error('Error fetching cameras:', err))
+  }, [])
 
   useEffect(() => {
     fetch('http://localhost:5000/get_ports')
       .then(res => res.json())
-      .then(data => {
-        setPorts(data.ports);
+      .then((data: { ports: Port[] }) => {
+        setPorts(data.ports)
       })
-      .catch(err => console.error('Error fetching ports:', err));
-  }, []);
+      .catch((err: Error) => console.error('Error fetching ports:', err))
+  }, [])
 
-  const handleCameraChange = (e) => {
-    const idx = e.target.value;
-    setImageTransmission(idx);
+  const handleCameraChange = (e: ChangeEvent<HTMLSelectElement>): void => {
+    const idx = e.target.value
+    setImageTransmission(idx)
     fetch('http://localhost:5000/set_camera', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ imageTransmission: idx })
-    });
-  };
+    })
+  }
 
-  const handleReciverChange = (e) => {
-    setReciver(e.target.value);
-  };
+  const handleReciverChange = (e: ChangeEvent<HTMLSelectElement>): void => {
+    setReciver(e.target.value)
+  }
 
   return (
     <div style={{ height: '63vh', width: '100%', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
@@ -185,7 +200,7 @@ const OtherSetting = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default OtherSetting;
+export default OtherSetting
