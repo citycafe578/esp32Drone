@@ -6,7 +6,7 @@ import SettingBtn from './components/Setting_btn/Setting_btn.jsx';
 import JoystickSetting from './components/settings/JoystickSetting/JoystickSetting.jsx';
 import DroneSetting from './components/settings/DroneSetting/DroneSetting.jsx';
 import FlightRecords from './components/settings/FlightRecords/FlightRecords.jsx';
-import OtherSetting from './components/settings/OtherSetting/OtherSetting.jsx';
+import OtherSetting from './components/settings/OtherSetting/OtherSetting.js';
 
 const OtherDataItem = ({title, return_data}) => {
   return(
