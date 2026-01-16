@@ -42,7 +42,7 @@ const OtherSetting: FC = () => {
 
   const initSettings = getInitOtherSettings()
   const [imageTransmission, setImageTransmission] = useState<string>(initSettings.imageTransmission)
-  const [cameras, setCameras] = useState<string[]>([])
+  const [cameras, setCameras] = useState<number[]>([])
   const [reciver, setReciver] = useState<string>(initSettings.reciver)
   const [ports, setPorts] = useState<Port[]>([])
   const [transmissionPower, setTransmissionPower] = useState<string>(initSettings.transmissionPower)
@@ -78,7 +78,7 @@ const OtherSetting: FC = () => {
   useEffect(() => {
     fetch('http://localhost:5000/list_cameras')
       .then(res => res.json())
-      .then((data: { cameras: string[] }) => {
+      .then((data: { cameras: number[] }) => {
         setCameras(data.cameras)
       })
       .catch((err: Error) => console.error('Error fetching cameras:', err))

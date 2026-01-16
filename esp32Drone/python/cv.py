@@ -5,8 +5,7 @@ import json
 import time
 import os
 import numpy as np
-import serial
-
+import serial.tools.list_ports
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
