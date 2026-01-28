@@ -1,6 +1,10 @@
 {
   "devDependencies": {
-    "concurrently": "^9.2.0"
+    "@types/leaflet": "^1.9.21",
+    "@types/react": "^19.2.8",
+    "@types/react-dom": "^19.2.3",
+    "concurrently": "^9.2.0",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
