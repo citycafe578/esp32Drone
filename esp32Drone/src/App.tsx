@@ -7,6 +7,7 @@ import JoystickSetting from './components/settings/JoystickSetting/JoystickSetti
 import DroneSetting from './components/settings/DroneSetting/DroneSetting'
 import FlightRecords from './components/settings/FlightRecords/FlightRecords'
 import OtherSetting from './components/settings/OtherSetting/OtherSetting.tsx'
+import { socket } from './socket';
 
 interface OtherDataItemProps {
   title: string
@@ -58,6 +59,8 @@ const App: FC = () => {
   const [showSetting, setShowSetting] = useState<boolean>(false)
   const [settingPage, setSettingPage] = useState<string>('')
   const [joystickLiveData, setJoystickLiveData] = useState<GamepadData[]>([])
+  const [status, setStatus] = useState('Disconnected');
+  let lastEmitTime = 0;
 
   const settingEntries: SettingEntry[] = [
     { key: 'joystick', title: 'Joystick Settings', image: '/joystick.png' },
@@ -93,6 +96,20 @@ const App: FC = () => {
   }
 
   useEffect(() => {
+    // socketio
+    socket.connect();
+    socket.on('status_update', (data: any) => {
+      console.log('from flask:', data);
+    });
+
+    socket.on('connect', () => setStatus('Connected'));
+    socket.on('disconnect', () => setStatus('Disconnected'));
+
+    const sendJoystickData = (val: number) => {
+      socket.emit('control_signal', { axis: 'pitch', val: val });
+    };
+
+    // otherthings
     let rafId: number
     function updateLive(): void {
       const pads = navigator.getGamepads ? Array.from(navigator.getGamepads()).filter(Boolean) as Gamepad[] : []
@@ -103,8 +120,8 @@ const App: FC = () => {
       }))
       setJoystickLiveData(data)
       const stream_words = document.getElementById('stream')
-      // debug mode
-      // stream_words.innerHTML = JSON.stringify(data, null, 2);
+
+      //stream_words.innerHTML = JSON.stringify(data, null, 2); // debug mode 所有資料
 
       const axisMapping = JSON.parse(localStorage.getItem('axisMapping') || '{}') as Record<string, number | null>
       const joystickIndex = (JSON.parse(localStorage.getItem('joystickIndex') || '0')) as number
@@ -125,7 +142,7 @@ const App: FC = () => {
           }
         })
       }
-      // stream_words.innerHTML = result || '尚未綁定'; // debug mode
+      //stream_words.innerHTML = result || '尚未綁定'; // debug mode 已綁定
       // 肏我討厭JS甚麼鬼邏輯
       // 比python還要玄
       // 一堆奇怪的語法
@@ -135,14 +152,20 @@ const App: FC = () => {
       rafId = requestAnimationFrame(updateLive)
     }
     updateLive()
-    return () => cancelAnimationFrame(rafId)
+    return () => {
+      cancelAnimationFrame(rafId)
+      socket.off('status_update');
+      socket.off('connect');
+      socket.off('disconnect');
+      socket.disconnect();
+    }
   }, [])
 
   return (
     <div id="app-wrapper" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div id='digital_display'>
         <div id='stream' className='digital_item'>
-          {/* <h1>stream</h1> */}
+          {/* <h1>stream</h1>   //debug mode 需註解*/}
           <img src="http://localhost:5000/video_feed" alt="camera" style={{ height: '100%', width: '100%', borderRadius: '10px' }} />
         </div>
         <div id='map' className='digital_item'>

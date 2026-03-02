@@ -6,9 +6,10 @@ import time
 import os
 import numpy as np
 import serial
+from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 camera = None
 paused = False
@@ -170,10 +171,19 @@ def get_ports():
     return jsonify({"ports": devices})
     
 
+@socketio.on('connect')
+def handle_connect():
+    print("socketio start working")
+
+@socketio.on('control_signal')
+def handle_signal(data):
+    print(f"收到指令: {data}")
+    emit('status_update', {'msg': '指令已執行', 'val': data['val']}, broadcast=True)
+
 
 if __name__ == "__main__":
     set_camera(get_camera_index())
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
 
 
 

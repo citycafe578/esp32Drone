@@ -141,7 +141,7 @@ const JoystickSetting: FC = () => {
         const nowPad = navigator.getGamepads()[gamepad.index]
         if (nowPad && !bound) {
             for (let i = 0; i < buttonsCount; i++) {
-            if (Math.abs(nowPad.buttons[i].value - startValues[i]) > 0.2) { // 靈敏度門檻
+            if (Math.abs(nowPad.buttons[i].value - startValues[i]) > 0.5) { // 靈敏度門檻
                 setBtnMapping(prev => {
                 const updated = { ...prev, [ctrlKey]: i }
                 saveSettings(axisMapping, updated)

@@ -23,8 +23,8 @@
   },
   "droneSettings": {
     "minimumCruisingAltitude": "OFF",
-    "lowAltitudeWarning": "100",
-    "imageHorizontalFlip": true,
+    "lowAltitudeWarning": "OFF",
+    "imageHorizontalFlip": false,
     "imageVerticalFlip": false,
     "maximumCruisingAltitude": "OFF",
     "geoFenceRadius": "False",
