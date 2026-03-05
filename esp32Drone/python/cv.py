@@ -7,6 +7,9 @@ import os
 import numpy as np
 import serial
 from flask_socketio import SocketIO, emit
+import threading
+
+
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -14,6 +17,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 camera = None
 paused = False
 json_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'settings.json'))
+data = []  # 控制數據
 
 
 def get_camera_index():
@@ -176,14 +180,49 @@ def handle_connect():
     print("socketio start working")
 
 @socketio.on('control_signal')
-def handle_signal(data):
-    print(f"收到指令: {data}")
-    emit('status_update', {'msg': '指令已執行', 'val': data['val']}, broadcast=True)
+def handle_signal(signal_data):
+    global data
+    print(f"收到指令: {signal_data}")
+    data = signal_data.get('val', [])
+    emit('status_update', {'msg': '指令已執行', 'val': data}, broadcast=True)
 
+
+def send_data(ser):
+    try:
+        while True:
+            data_to_send = data #熟悉嗎?沒錯，就是 XT1的邏輯
+            message = ' '.join([str(data) for data in data_to_send])
+            message += '\n'
+            ser.write(message.encode('utf-8'))
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        print("Serial closed")
+        ser.close()
+
+def receive_data(ser):
+    try:
+        while True:
+            if ser.in_waiting > 0:
+                data_received = ser.readline().decode('utf-8').strip()
+                print(f"Received data: {data_received}")
+    except KeyboardInterrupt:
+        print("Serial closed")
+        ser.close()
+
+ser = serial.Serial("COM9", 115200, timeout = 1.0)
+time.sleep(1)
+print("Serial ok")
+
+send_thread = threading.Thread(target = send_data, args = (ser,))
+receive_thread = threading.Thread(target = receive_data, args = (ser,))
+send_thread.daemon = True
+receive_thread.daemon = True
+send_thread.start()
+receive_thread.start()
 
 if __name__ == "__main__":
     set_camera(get_camera_index())
-    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True, use_reloader=False)
 
 
 
