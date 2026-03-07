@@ -1,4 +1,4 @@
-import { useState, useEffect, FC, ChangeEvent } from 'react'
+import { useState, useEffect, FC, ChangeEvent, Dispatch, SetStateAction } from 'react'
 import '../JoystickSetting/JoystickSetting.css'
 import '../../../App.css'
 
@@ -16,7 +16,12 @@ interface Port {
   name: string
 }
 
-const OtherSetting: FC = () => {
+interface OtherSettingProps {
+  theme: 'dark' | 'light'
+  setTheme: Dispatch<SetStateAction<'dark' | 'light'>>
+}
+
+const OtherSetting: FC<OtherSettingProps> = ({ theme, setTheme }) => {
   const getInitOtherSettings = (): OtherSettings => {
     const local = localStorage.getItem("otherSettings")
     if (local) {
@@ -116,32 +121,22 @@ const OtherSetting: FC = () => {
   }
 
   return (
-    <div style={{ height: '63vh', width: '100%', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ height: '63vh', width: '100%', display: 'flex', flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', gap: '16px', paddingTop: '12px' }}>
       {/* 左邊 */}
       <div className='column_bar'>
         <div className='settings'>
-          <h1 style={{ justifyContent: 'left' }}>Image Transmission</h1>
-          <select
-            value={imageTransmission}
-            onChange={handleCameraChange}
-            style={{ justifyContent: 'right' }}
-          >
-            <option value="">Select Camera:</option>
+          <h1>Image Transmission</h1>
+          <select value={imageTransmission} onChange={handleCameraChange}>
+            <option value="">Select Camera</option>
             {cameras.map((idx) => (
-              <option key={idx} value={idx}>
-                Camera {idx}
-              </option>
+              <option key={idx} value={idx}>Camera {idx}</option>
             ))}
           </select>
         </div>
 
         <div className='settings'>
-          <h1 style={{ justifyContent: 'left' }}>Low Altitude Warning Sound Effect</h1>
-          <select
-            value={LAWSE}
-            onChange={(e) => setLAWSE(e.target.value)}
-            style={{ justifyContent: 'right' }}
-          >
+          <h1>Low Alt Warning SFX</h1>
+          <select value={LAWSE} onChange={(e) => setLAWSE(e.target.value)}>
             <option>Sound Effect 1</option>
             <option>Sound Effect 2</option>
             <option>Sound Effect 3</option>
@@ -152,10 +147,7 @@ const OtherSetting: FC = () => {
 
         <div className='settings'>
           <h1>Image Sharpen</h1>
-          <select
-            value={sharpen}
-            onChange={(e) => setSharpen(e.target.value)}
-          >
+          <select value={sharpen} onChange={(e) => setSharpen(e.target.value)}>
             <option value={0}>0%</option>
             <option value={25}>25%</option>
             <option value={50}>50%</option>
@@ -168,26 +160,18 @@ const OtherSetting: FC = () => {
       {/* 右邊 */}
       <div className='column_bar'>
         <div className='settings'>
-          <h1 style={{ justifyContent: 'left' }}>Reciver</h1>
-          <select
-            value={reciver}
-            onChange={handleReciverChange}
-          >
-            <option value="">Reciver:</option>
+          <h1>Receiver</h1>
+          <select value={reciver} onChange={handleReciverChange}>
+            <option value="">Select Port</option>
             {ports.map((port, idx) => (
-              <option key={idx} value={port.device}>
-                {port.device} - {port.name}
-              </option>
+              <option key={idx} value={port.device}>{port.device} — {port.name}</option>
             ))}
           </select>
         </div>
 
         <div className='settings'>
-          <h1 style={{ justifyContent: 'left' }}>Transmission Power</h1>
-          <select
-            value={transmissionPower}
-            onChange={(e) => setTransmissionPower(e.target.value)}
-          >
+          <h1>Transmission Power</h1>
+          <select value={transmissionPower} onChange={(e) => setTransmissionPower(e.target.value)}>
             <option>Low</option>
             <option>High</option>
           </select>
@@ -195,16 +179,24 @@ const OtherSetting: FC = () => {
 
         <div className='settings'>
           <h1>Image Grayscale</h1>
-          <select
-            value={grayscale}
-            onChange={(e) => setGrayscale(e.target.value)}
-          >
+          <select value={grayscale} onChange={(e) => setGrayscale(e.target.value)}>
             <option value={0}>0%</option>
             <option value={25}>25%</option>
             <option value={50}>50%</option>
             <option value={75}>75%</option>
             <option value={100}>100%</option>
           </select>
+        </div>
+
+        <div className='settings'>
+          <h1>Theme</h1>
+          <button
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            style={{ minWidth: 120 }}
+          >
+            {theme === 'dark' ? '🌙 Dark' : '☀️ Light'}
+          </button>
+          <span>{theme === 'dark' ? '深色模式' : '原始配色'}</span>
         </div>
       </div>
     </div>

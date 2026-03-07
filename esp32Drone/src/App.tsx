@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, FC, ReactNode } from 'react'
+import './index.css'
 import './App.css'
 import SideUpBar from './components/SideUpBar/SideUpBar'
 import MapComponent from './components/MapComponent/MapComponent'
@@ -16,13 +17,9 @@ interface OtherDataItemProps {
 
 const OtherDataItem: FC<OtherDataItemProps> = ({ title, return_data }) => {
   return (
-    <div className='other_item' style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'gray', width: '20%', height: '100%', margin: '15px', borderRadius: '10px' }}>
-      <div style={{ display: 'flex', width: '100%', height: '150px', alignItems: 'center', justifyContent: 'center' }}>
-        <h2>{title}</h2>
-      </div>
-      <div style={{ display: 'flex', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
-        <h1>{return_data}</h1>
-      </div>
+    <div className='other_item'>
+      <h2>{title}</h2>
+      <h1>{return_data}</h1>
     </div>
   )
 }
@@ -35,8 +32,8 @@ interface SettingEntryProps {
 
 const Setting_entry: FC<SettingEntryProps> = ({ title, image, onClick }) => {
   return (
-    <button onClick={onClick} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '24%', aspectRatio: '1 / 1', margin: '0.5%', borderRadius: '10px', backgroundColor: 'gray' }}>
-      <img src={image} alt={title} style={{ width: '50px', height: '50px' }} />
+    <button className='setting-card' onClick={onClick}>
+      <img src={image} alt={title} />
       <h3>{title}</h3>
     </button>
   )
@@ -61,6 +58,15 @@ const App: FC = () => {
   const [joystickLiveData, setJoystickLiveData] = useState<GamepadData[]>([])
   const [status, setStatus] = useState('Disconnected');
   const lastEmitTime = useRef(0);
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    return (localStorage.getItem('theme') as 'dark' | 'light') || 'dark'
+  })
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('theme', theme)
+  }, [theme])
+
 
   const settingEntries: SettingEntry[] = [
     { key: 'joystick', title: 'Joystick Settings', image: '/joystick.png' },
@@ -78,10 +84,10 @@ const App: FC = () => {
       case 'flight':
         return <FlightRecords />
       case 'other':
-        return <OtherSetting />
+        return <OtherSetting theme={theme} setTheme={setTheme} />
       default:
         return (
-          <div className="setting-entries" style={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'row', height: '70vh', width: '100%', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div className="setting-entries">
             {settingEntries.map(entry => (
               <Setting_entry
                 key={entry.key}
@@ -175,27 +181,27 @@ const App: FC = () => {
           {!sideUpBarOpen && <MapComponent />}
         </div>
       </div>
-      <div id='other_display' style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%', height: '20vh' }}>
+      <div id='other_display'>
         <OtherDataItem title='COURSE' return_data=' ' />
         <OtherDataItem title='HEIGHT' return_data=' ' />
-        <OtherDataItem title='123' return_data=' ' />
-        <OtherDataItem title='456' return_data=' ' />
-        <OtherDataItem title='789' return_data=' ' />
+        <OtherDataItem title='ROLL' return_data=' ' />
+        <OtherDataItem title='PITCH' return_data=' ' />
+        <OtherDataItem title='THROTTLE' return_data=' ' />
       </div>
       <SideUpBar open={sideUpBarOpen} setOpen={setSideUpBarOpen} />
       <SettingBtn onClick={() => { setShowSetting(true); setSettingPage(''); }} />
       {showSetting && (
         <div className="setting-overlay">
           <div className="setting-modal">
-            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', height: '5vh' }}>
+            <div className='modal-header'>
               <h2>
                 {settingPage === ''
                   ? 'Settings'
                   : settingEntries.find(e => e.key === settingPage)?.title || 'Settings'}
               </h2>
               {settingPage === ''
-                ? <button onClick={() => setShowSetting(false)} style={{ backgroundColor: 'transparent' }}><img src='/close.png' alt="設定" className='close_btn_pic'></img></button>
-                : <button onClick={() => setSettingPage('')} style={{ backgroundColor: 'transparent' }} ><img src='/close.png' alt="設定" className='close_btn_pic'></img></button>
+                ? <button className='close-btn' onClick={() => setShowSetting(false)}><img src='/close.png' alt="關閉" className='close_btn_pic'></img></button>
+                : <button className='close-btn' onClick={() => setSettingPage('')}><img src='/close.png' alt="返回" className='close_btn_pic'></img></button>
               }
             </div>
             {renderSettingContent()}

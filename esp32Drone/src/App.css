@@ -1,19 +1,18 @@
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-/* html, body {
-  height: 100%;
-} */
+@import './index.css';
 
 body {
-  background-color: rgb(174, 173, 173);
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
 }
 
+#app-wrapper {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Main display ────────────────────────────────── */
 #digital_display {
   display: flex;
   flex-direction: row;
@@ -21,45 +20,152 @@ body {
   height: 75vh;
   justify-content: space-between;
   align-items: center;
-  position: relative;
-  top: 1em;
+  padding: 12px 12px 6px;
+  gap: 10px;
 }
 
 .digital_item {
   flex: 1;
-  margin: 10px;
-  height: 95%;
-  width: 50%;
-  background-color: gray;
-  border-radius: 10px;
+  height: 100%;
+  background-color: var(--surface-1);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  position: relative;
 }
 
+
+/* ── Other data row ──────────────────────────────── */
+#other_display {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+  height: 20vh;
+  padding: 0 6px 8px;
+}
+
+.other_item {
+  flex: 1;
+  height: calc(100% - 16px);
+  margin: 8px 6px;
+  background: var(--surface-1) !important;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md) !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: border-color var(--transition);
+}
+
+
+.other_item:hover {
+  border-color: var(--accent);
+}
+
+.other_item h2 {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-2);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.other_item h1 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+/* ── Setting overlay / modal ─────────────────────── */
 .setting-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0,0,0,0.5);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
   z-index: 3000;
   display: flex;
   align-items: center;
   justify-content: center;
 }
+
 .setting-modal {
-  background: rgb(174, 173, 173);
-  padding: 40px 32px;
-  border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  padding: 28px 32px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
   min-width: 80vw;
   min-height: 80vh;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
+  gap: 16px;
+  overflow: hidden;
 }
 
-.column_bar{
+/* Setting entries grid */
+.setting-entries {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  grid-template-rows: repeat(2, 1fr) !important;
+  gap: 12px !important;
+  width: 100% !important;
+  height: 100% !important;
+  flex: 1 !important;
+  flex-wrap: unset !important;
+}
+
+/* ── Close button ────────────────────────────────── */
+.close_btn_pic {
+  width: 28px;
+  height: 28px;
+  opacity: 0.6;
+  transition: opacity var(--transition);
+  filter: invert(1);
+}
+
+.close_btn_pic:hover {
+  opacity: 1;
+}
+
+/* ── Setting entry card ──────────────────────────── */
+button.setting-card {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  border-radius: var(--radius-md) !important;
+  background: var(--surface-2) !important;
+  border: 1px solid var(--border) !important;
+  gap: 12px;
+  transition: background var(--transition), border-color var(--transition), transform var(--transition) !important;
+}
+
+button.setting-card:hover {
+  background: var(--surface-3) !important;
+  border-color: var(--accent) !important;
+  transform: translateY(-2px);
+}
+
+button.setting-card img {
+  width: 36px;
+  height: 36px;
+  filter: invert(1);
+  opacity: 0.75;
+}
+
+button.setting-card h3 {
+  font-size: 0.8rem;
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+.column_bar {
   width: 50%;
   height: 100%;
   display: flex;
@@ -69,7 +175,30 @@ body {
   justify-content: center;
 }
 
-.close_btn_pic{
-  width: 35px;
-  height: 35px;
+/* ── Modal header ────────────────────────────────── */
+.modal-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 40px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Close / back button in modal ────────────────── */
+button.close-btn {
+  background: transparent !important;
+  border: none !important;
+  padding: 4px !important;
+  border-radius: var(--radius-sm) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition) !important;
+}
+
+button.close-btn:hover {
+  background: var(--surface-2) !important;
 }
