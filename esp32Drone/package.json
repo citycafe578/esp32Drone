@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "dev:react": "vite",
-    "dev:python": "python ./python/cv.py"
+    "dev:python": "set PYTHONUNBUFFERED=1 && python -u ./python/cv.py"
   },
   "dependencies": {
     "leaflet": "^1.9.4",

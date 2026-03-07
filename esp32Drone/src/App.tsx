@@ -1,4 +1,4 @@
-import { useEffect, useState, FC, ReactNode } from 'react'
+import { useEffect, useState, useRef, FC, ReactNode } from 'react'
 import './App.css'
 import SideUpBar from './components/SideUpBar/SideUpBar'
 import MapComponent from './components/MapComponent/MapComponent'
@@ -60,7 +60,7 @@ const App: FC = () => {
   const [settingPage, setSettingPage] = useState<string>('')
   const [joystickLiveData, setJoystickLiveData] = useState<GamepadData[]>([])
   const [status, setStatus] = useState('Disconnected');
-  let lastEmitTime = 0;
+  const lastEmitTime = useRef(0);
 
   const settingEntries: SettingEntry[] = [
     { key: 'joystick', title: 'Joystick Settings', image: '/joystick.png' },
@@ -96,20 +96,13 @@ const App: FC = () => {
   }
 
   useEffect(() => {
-    // socketio
     socket.connect();
     socket.on('status_update', (data: any) => {
       console.log('from flask:', data);
     });
-
     socket.on('connect', () => setStatus('Connected'));
     socket.on('disconnect', () => setStatus('Disconnected'));
 
-    const sendJoystickData = (val: number) => {
-      socket.emit('control_signal', { axis: 'pitch', val: val });
-    };
-
-    // otherthings
     let rafId: number
     function updateLive(): void {
       const pads = navigator.getGamepads ? Array.from(navigator.getGamepads()).filter(Boolean) as Gamepad[] : []
@@ -119,36 +112,46 @@ const App: FC = () => {
         buttons: pad.buttons.map(btn => btn.value)
       }))
       setJoystickLiveData(data)
-      const stream_words = document.getElementById('stream')
-
-      //stream_words.innerHTML = JSON.stringify(data, null, 2); // debug mode 所有資料
 
       const axisMapping = JSON.parse(localStorage.getItem('axisMapping') || '{}') as Record<string, number | null>
-      const joystickIndex = (JSON.parse(localStorage.getItem('joystickIndex') || '0')) as number
-      let result = ''
-      if (data[joystickIndex]) {
-        Object.entries(axisMapping).forEach(([key, axisIdx]) => {
-          if (axisIdx !== null && data[joystickIndex].axes[axisIdx] !== undefined) {
-            result += `${key}: ${data[joystickIndex].axes[axisIdx].toFixed(3)}<br>`
-          }
-        })
-        result = `<b>Joystick: ${data[joystickIndex].id}</b><br>` + result
-      }
       const btnMapping = JSON.parse(localStorage.getItem('btnMapping') || '{}') as Record<string, number | null>
-      if (data[joystickIndex]) {
-        Object.entries(btnMapping).forEach(([key, btnIdx]) => {
-          if (btnIdx !== null && data[joystickIndex].buttons[btnIdx] !== undefined) {
-            result += `${key}: ${data[joystickIndex].buttons[btnIdx]}<br>`
-          }
+      const joystickIndex = (JSON.parse(localStorage.getItem('joystickIndex') || '0')) as number
+      const pad = data[joystickIndex]
+
+      // 每 100ms emit 一次
+      const now = Date.now()
+      if (pad && now - lastEmitTime.current >= 100) {
+        lastEmitTime.current = now
+
+        const getAxis = (key: string): number => {
+          const idx = axisMapping[key]
+          return idx !== null && idx !== undefined ? (pad.axes[idx] ?? 0) : 0
+        }
+        const getBtn = (key: string): number => {
+          const idx = btnMapping[key]
+          return idx !== null && idx !== undefined ? (pad.buttons[idx] ?? 0) : 0
+        }
+
+        const throttle = Math.round(((getAxis('altitude') + 1) / 2) * 1000 + 1000)
+        const pitch = Math.round(((getAxis('pitch') + 1) / 2) * 1000 + 1000)
+        const yaw = Math.round(((getAxis('yaw') + 1) / 2) * 1000 + 1000)
+        const roll = Math.round(((getAxis('roll') + 1) / 2) * 1000 + 1000)
+        const estop = getBtn('emergency stop') > 0.5 ? 1 : 0
+        const startup = getBtn('start up') > 0.5 ? 1 : 0
+        const speedMode = getBtn('speed mode') > 0.5 ? 1 : 0
+        const obstacleAvoidance = getBtn('obstacle avoidance') > 0.5 ? 1 : 0
+        const stillDontKnow = getBtn('still dont know') > 0.5 ? 1 : 0
+
+        socket.emit('control_signal', {
+          throttle, pitch, yaw, roll,
+          emergency_stop: estop,
+          start_up: startup,
+          speed_mode: speedMode,
+          obstacle_avoidance: obstacleAvoidance,
+          still_dont_know: stillDontKnow,
         })
       }
-      //stream_words.innerHTML = result || '尚未綁定'; // debug mode 已綁定
-      // 肏我討厭JS甚麼鬼邏輯
-      // 比python還要玄
-      // 一堆奇怪的語法
-      // 我直接用AI生成還比較快
 
-      // console.log(data)
       rafId = requestAnimationFrame(updateLive)
     }
     updateLive()

@@ -104,7 +104,15 @@ const OtherSetting: FC = () => {
   }
 
   const handleReciverChange = (e: ChangeEvent<HTMLSelectElement>): void => {
-    setReciver(e.target.value)
+    const port = e.target.value
+    setReciver(port)
+    if (port) {
+      fetch('http://localhost:5000/set_port', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ port })
+      }).then(res => res.json()).then(d => console.log('[set_port]', d))
+    }
   }
 
   return (

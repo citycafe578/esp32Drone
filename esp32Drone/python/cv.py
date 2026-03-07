@@ -6,18 +6,39 @@ import time
 import os
 import numpy as np
 import serial
+import serial.tools.list_ports
 from flask_socketio import SocketIO, emit
 import threading
 
 
 
 app = Flask(__name__)
+CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 camera = None
 paused = False
 json_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'settings.json'))
-data = []  # 控制數據
+control_data = {}  # 控制數據 {throttle, pitch, yaw, roll, emergency_stop}
+ser = None  # serial 連線（可選）
+
+
+def try_open_serial(port: str):
+    """嘗試開啟 serial port，失敗不 crash"""
+    global ser
+    if ser is not None:
+        try:
+            ser.close()
+        except Exception:
+            pass
+        ser = None
+    try:
+        ser = serial.Serial(port, 115200, timeout=1.0)
+        time.sleep(0.5)
+        print(f"Serial opened: {port}")
+    except Exception as e:
+        ser = None
+        print(f"[WARN] Serial open failed ({port}): {e}")
 
 
 def get_camera_index():
@@ -173,56 +194,65 @@ def get_ports():
             "name": port.description
         })
     return jsonify({"ports": devices})
+
+
+@app.route('/set_port', methods=['POST'])
+def set_port():
+    body = request.get_json()
+    port = body.get('port', '')
+    if not port:
+        return jsonify({'status': 'error', 'msg': 'no port'}), 400
+    try_open_serial(port)
+    status = 'ok' if ser is not None else 'failed'
+    return jsonify({'status': status, 'port': port})
     
 
 @socketio.on('connect')
 def handle_connect():
-    print("socketio start working")
+    print("Client connected")
+
 
 @socketio.on('control_signal')
 def handle_signal(signal_data):
-    global data
-    print(f"收到指令: {signal_data}")
-    data = signal_data.get('val', [])
-    emit('status_update', {'msg': '指令已執行', 'val': data}, broadcast=True)
+    global control_data
+    control_data = {
+        'throttle':           signal_data.get('throttle', 0),
+        'pitch':              signal_data.get('pitch', 0),
+        'yaw':                signal_data.get('yaw', 0),
+        'roll':               signal_data.get('roll', 0),
+        'emergency_stop':     signal_data.get('emergency_stop', 0),
+        'start_up':           signal_data.get('start_up', 0),
+        'speed_mode':         signal_data.get('speed_mode', 0),
+        'obstacle_avoidance': signal_data.get('obstacle_avoidance', 0),
+        'still_dont_know':    signal_data.get('still_dont_know', 0),
+    }
+    print(f"[Joystick] thr={control_data['throttle']} "
+          f"pit={control_data['pitch']} "
+          f"yaw={control_data['yaw']} "
+          f"rol={control_data['roll']} "
+          f"estop={control_data['emergency_stop']} "
+          f"startup={control_data['start_up']} "
+          f"spd={control_data['speed_mode']} "
+          f"obs={control_data['obstacle_avoidance']} "
+          f"sdk={control_data['still_dont_know']}")
 
+    # 有連接 serial 就送出去
+    if ser is not None and ser.is_open:
+        msg = (f"{control_data['throttle']} "
+               f"{control_data['pitch']} "
+               f"{control_data['yaw']} "
+               f"{control_data['roll']} "
+               f"{control_data['emergency_stop']}\n")
+        try:
+            ser.write(msg.encode('utf-8'))
+        except Exception as e:
+            print(f"[Serial write error] {e}")
 
-def send_data(ser):
-    try:
-        while True:
-            data_to_send = data #熟悉嗎?沒錯，就是 XT1的邏輯
-            message = ' '.join([str(data) for data in data_to_send])
-            message += '\n'
-            ser.write(message.encode('utf-8'))
-            time.sleep(0.1)
-    except KeyboardInterrupt:
-        print("Serial closed")
-        ser.close()
-
-def receive_data(ser):
-    try:
-        while True:
-            if ser.in_waiting > 0:
-                data_received = ser.readline().decode('utf-8').strip()
-                print(f"Received data: {data_received}")
-    except KeyboardInterrupt:
-        print("Serial closed")
-        ser.close()
-
-ser = serial.Serial("COM9", 115200, timeout = 1.0)
-time.sleep(1)
-print("Serial ok")
-
-send_thread = threading.Thread(target = send_data, args = (ser,))
-receive_thread = threading.Thread(target = receive_data, args = (ser,))
-send_thread.daemon = True
-receive_thread.daemon = True
-send_thread.start()
-receive_thread.start()
+    emit('status_update', control_data, broadcast=True)
 
 if __name__ == "__main__":
     set_camera(get_camera_index())
-    socketio.run(app, host="0.0.0.0", port=5000, debug=True, use_reloader=False)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True, use_reloader=False, allow_unsafe_werkzeug=True)
 
 
 
