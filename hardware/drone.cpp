@@ -1,14 +1,14 @@
-#include "esp_wifi.h"
+#include <Wire.h>
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
-#include <AutoPID.h>
-#include <ESP32Servo.h>
-#include <Preferences.h>
-#include <RF24.h>
 #include <SPI.h>
-#include <WebServer.h>
+#include <RF24.h>
+#include <ESP32Servo.h>
+#include <AutoPID.h>
 #include <WiFi.h>
-#include <Wire.h>
+#include <WebServer.h>
+#include <Preferences.h>
+#include "esp_wifi.h"
 
 #define SCK 4
 #define MISO 5
@@ -29,18 +29,17 @@ unsigned long calibrationStartTime = 0;
 
 Preferences prefs;
 
-// PID structs
-struct AxisPID {
-  double p, i, d;
-};
-AxisPID rollPID = {0.0, 0.0, 0.0};
+//PID structs
+struct AxisPID{double p, i, d;};
+AxisPID rate_rollPID = {0.0, 0.0, 0.0};
+AxisPID rate_pitchPID = {0.0, 0.0, 0.0};
+AxisPID rate_yawPID = {0.0, 0.0, 0.0};
+AxisPID rollPID  = {0.0, 0.0, 0.0};
 AxisPID pitchPID = {0.0, 0.0, 0.0};
-AxisPID yawPID = {0.0, 0.0, 0.0};
+AxisPID yawPID   = {0.0, 0.0, 0.0};
 
-// Mpu struct
-struct MpuData {
-  float roll_off, pitch_off, gyro_x_off, gyro_y_off, gyro_z_off;
-};
+//Mpu struct
+struct MpuData{float roll_off, pitch_off, gyro_x_off, gyro_y_off, gyro_z_off;};
 MpuData mpuData = {0.0, 0.0, 0.0, 0.0, 0.0};
 
 String getHTML() {
@@ -148,6 +147,8 @@ String getHTML() {
                     <option value = "roll">Roll</option>
                     <option value = "pitch">Pitch</option>
                     <option value = "yaw">Yaw</option>
+                    <option value = "rate_roll">Rate Roll</option>
+                    <option value = "rate_pitch">Rate Pitch</option>
                 </select>
                 <select name = "param" id = "param">
                     <option value  = null>請選擇</option>
@@ -188,6 +189,18 @@ String getHTML() {
                         <td>%YAW_I%</td>
                         <td>%YAW_D%</td>
                     </tr>
+                    <tr>
+                        <td>Rate Roll<l/td>
+                        <td>%RATE_ROLL_P%</td>
+                        <td>%RATE_ROLL_I%</td>
+                        <td>%RATE_ROLL_D%</td>
+                    </tr>
+                    <tr>
+                        <td>Rate Pitch</td>
+                        <td>%RATE_PITCH_P%</td>
+                        <td>%RATE_PITCH_I%</td>
+                        <td>%RATE_PITCH_D%</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -198,7 +211,7 @@ String getHTML() {
     </body>
     </html>
     )=====";
-
+  
   html.replace("%ROLL_P%", String(rollPID.p));
   html.replace("%ROLL_I%", String(rollPID.i));
   html.replace("%ROLL_D%", String(rollPID.d));
@@ -209,15 +222,38 @@ String getHTML() {
   html.replace("%YAW_I%", String(yawPID.i));
   html.replace("%YAW_D%", String(yawPID.d));
   html.replace("%THR_VAL%", String(map(throttle, 1000, 2000, 0, 100)));
+  html.replace("%RATE_ROLL_P%", String(rate_rollPID.p));
+  html.replace("%RATE_ROLL_I%", String(rate_rollPID.i));
+  html.replace("%RATE_ROLL_D%", String(rate_rollPID.d));
+  html.replace("%RATE_PITCH_P%", String(rate_pitchPID.p));
+  html.replace("%RATE_PITCH_I%", String(rate_pitchPID.i));
+  html.replace("%RATE_PITCH_D%", String(rate_pitchPID.d));
   return html;
 }
 
-// NRF
+//NRF
 RF24 radio(CE, CSN);
 const byte address[6] = "00001";
 char receivedData[32] = {0};
+unsigned long lastRecvTime = 0;
+const uint8_t NRF_CHANNEL = 100;
 
-// MPU
+// Computer Data
+struct __attribute__((packed)) ComData {
+  uint8_t header;
+  uint8_t cmd;
+  int16_t throttle;
+  int16_t pitch;
+  int16_t yaw;
+  int16_t roll;
+  int16_t emergency_stop;
+  int16_t start_up;
+  int16_t speed_mode;
+  int16_t obstacle_avoidance;
+  int16_t still_dont_know;
+};
+
+//MPU
 Adafruit_MPU6050 mpu;
 float roll = 0;
 float pitch = 0;
@@ -225,23 +261,28 @@ float yaw = 0;
 float dt = 0;
 unsigned long prev_time = 0;
 
-// PID
+//PID
 double setpoint_roll = 0, input_roll, output_roll;
 double setpoint_pitch = 0, input_pitch, output_pitch;
 double setpoint_yaw = 0, input_yaw, output_yaw;
-AutoPID pid_roll(&input_roll, &setpoint_roll, &output_roll, -150, 150,
-                 rollPID.p, rollPID.i, rollPID.d);
-AutoPID pid_pitch(&input_pitch, &setpoint_pitch, &output_pitch, -150, 150,
-                  pitchPID.p, pitchPID.i, pitchPID.d);
-AutoPID pid_yaw(&input_yaw, &setpoint_yaw, &output_yaw, -100, 100, yawPID.p,
-                yawPID.i, yawPID.d);
+double setpoint_rate_roll = 0, input_rate_roll, output_rate_roll;
+double setpoint_rate_pitch = 0, input_rate_pitch, output_rate_pitch;
 
-// Motors
+AutoPID pid_rate_roll(&input_rate_roll, &setpoint_rate_roll, &output_rate_roll, -400, 400, rate_rollPID.p, rate_rollPID.i, rate_rollPID.d);
+AutoPID pid_rate_pitch(&input_rate_pitch, &setpoint_rate_pitch, &output_rate_pitch, -400, 400, rate_pitchPID.p, rate_pitchPID.i, rate_pitchPID.d);
+AutoPID pid_roll(&input_roll, &setpoint_roll, &output_roll, -90, 90, rollPID.p, rollPID.i, rollPID.d);
+AutoPID pid_pitch(&input_pitch, &setpoint_pitch, &output_pitch, -90, 90, pitchPID.p, pitchPID.i, pitchPID.d);
+AutoPID pid_yaw(&input_yaw, &setpoint_yaw, &output_yaw, -100, 100, yawPID.p, yawPID.i, yawPID.d);
+
+//Motors
 Servo FL, FR, BL, BR;
 int servo_pins[4] = {1, 3, 0, 2};
 
-void save_PID_config() {
+
+void save_PID_config(){
   prefs.begin("PIDs", false);
+  prefs.putBytes("rate_rollPID", &rate_rollPID, sizeof(rate_rollPID));
+  prefs.putBytes("rate_pitchPID", &rate_pitchPID, sizeof(rate_pitchPID));
   prefs.putBytes("rollPID", &rollPID, sizeof(rollPID));
   prefs.putBytes("pitchPID", &pitchPID, sizeof(pitchPID));
   prefs.putBytes("yawPID", &yawPID, sizeof(yawPID));
@@ -249,30 +290,31 @@ void save_PID_config() {
   Serial.println("PID prefs saved");
 }
 
-void save_Mpu_config() {
+void save_Mpu_config(){
   prefs.begin("Mpu", false);
   prefs.putBytes("mpuData", &mpuData, sizeof(mpuData));
   prefs.end();
   Serial.println("Mpu prefs saved");
 }
 
-void load_PID_config() {
+void load_PID_config(){
   prefs.begin("PIDs", true);
-  if (prefs.isKey("rollPID") && prefs.isKey("pitchPID") &&
-      prefs.isKey("yawPID")) {
+  if(prefs.isKey("rollPID") && prefs.isKey("pitchPID") && prefs.isKey("yawPID")){
+    prefs.getBytes("rate_rollPID", &rate_rollPID, sizeof(rate_rollPID));
+    prefs.getBytes("rate_pitchPID", &rate_pitchPID, sizeof(rate_pitchPID));
     prefs.getBytes("rollPID", &rollPID, sizeof(rollPID));
     prefs.getBytes("pitchPID", &pitchPID, sizeof(pitchPID));
     prefs.getBytes("yawPID", &yawPID, sizeof(yawPID));
     Serial.println("Successfully");
-  } else {
+  }else{
     Serial.println("faild");
   }
   prefs.end();
 }
 
-void load_Mpu_config() {
+void load_Mpu_config(){
   prefs.begin("Mpu", true);
-  if (prefs.isKey("mpuData")) {
+  if(prefs.isKey("mpuData")){
     prefs.getBytes("mpuData", &mpuData, sizeof(mpuData));
     Serial.println("Data loaded");
   } else {
@@ -281,47 +323,45 @@ void load_Mpu_config() {
   prefs.end();
 }
 
-void init_mpu() {
+
+void init_mpu(){ 
   isCalibrating = true;
   motorArmed = false;
   throttle = 1000;
   Serial.println("\n--- Initing ---");
 
-  if (!mpu.begin())
-    return;
+  if (!mpu.begin()) return;
   mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
   mpu.setGyroRange(MPU6050_RANGE_250_DEG);
-  mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
+  mpu.setFilterBandwidth(MPU6050_BAND_10_HZ);
 
   float sum_roll = 0, sum_pitch = 0;
   float sum_gx = 0, sum_gy = 0, sum_gz = 0;
 
-  for (int i = 0; i < 1500; i++) {
+  for (int i = 0; i < 1500; i++){
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
-    float cal_roll = atan2(a.acceleration.z, a.acceleration.x) * 57.296;
-    float cal_pitch =
-        atan2(-a.acceleration.y, sqrt(a.acceleration.x * a.acceleration.x +
-                                      a.acceleration.z * a.acceleration.z)) *
-        57.296;
+    float cal_roll = atan2(a.acceleration.z, a.acceleration.x) * 57.296; 
+    float cal_pitch = atan2(-a.acceleration.y, sqrt(a.acceleration.x * a.acceleration.x + a.acceleration.z * a.acceleration.z)) * 57.296;
+
 
     sum_roll += cal_roll;
     sum_pitch += cal_pitch;
-
+    
     sum_gx += g.gyro.x;
     sum_gy += g.gyro.y;
     sum_gz += g.gyro.z;
     delay(1);
   }
 
-  mpuData.roll_off =
-      sum_roll / 1500; // 不在這裡減 90，由 input_roll = roll - 90 統一處理
-  mpuData.pitch_off = (sum_pitch / 1500);
 
+  mpuData.roll_off =  (sum_roll / 1500) - 90;
+  mpuData.pitch_off = (sum_pitch / 1500);
+  
   mpuData.gyro_x_off = sum_gx / 1500;
   mpuData.gyro_y_off = sum_gy / 1500;
   mpuData.gyro_z_off = sum_gz / 1500;
-
+  
   save_Mpu_config();
   Serial.println("Init Finished");
   isCalibrating = false;
@@ -329,23 +369,41 @@ void init_mpu() {
 
 void setup() {
   Serial.begin(115200);
-  delay(3000);
-  Serial.println("Hello World");
+  delay(300);
+  Serial.println();
+  Serial.println("=== DRONE BOOT ===");
+  Serial.flush();
 
-  // WiFi
+  SPI.begin(SCK, MISO, MOSI, CSN);
+  if (!radio.begin()) {
+    Serial.println("NRF24L01 Hardware not found!");
+    while (1);
+  }
+  radio.openReadingPipe(1, address);
+  radio.setChannel(NRF_CHANNEL);
+  radio.setPALevel(RF24_PA_LOW);
+  radio.setDataRate(RF24_250KBPS);
+  radio.setPayloadSize(sizeof(ComData));
+  radio.startListening();
+  Serial.printf("NRF config: channel=%u payload=%u chip=%s\n",
+                NRF_CHANNEL,
+                (unsigned)sizeof(ComData),
+                radio.isChipConnected() ? "connected" : "not connected");
+
+  //WiFi
   WiFi.persistent(false);
   WiFi.mode(WIFI_AP);
-  if (WiFi.softAP(ssid, password)) {
+  if(WiFi.softAP(ssid, password)){
     Serial.println("wifi setup successful");
-  } else {
+  }else{
     Serial.println("wifi setup fail");
   }
   esp_wifi_set_max_tx_power(40);
   Serial.println("WiFi IP: " + WiFi.softAPIP().toString());
 
-  // Server
-  server.on("/", []() { server.send(200, "text/html", getHTML()); });
-  server.on("/set_throttle", []() {
+  //Server
+  server.on("/", [](){ server.send(200, "text/html", getHTML()); });
+  server.on("/set_throttle", [](){
     if (server.hasArg("val")) {
       int percent = server.arg("val").toInt();
       throttle = map(percent, 0, 100, 1000, 2000);
@@ -353,86 +411,88 @@ void setup() {
     }
     server.send(200, "text/plain", "OK");
   });
-  server.on("/kill", []() {
-    motorArmed = false;
+  server.on("/kill", [](){ 
+    motorArmed = false; 
     throttle = 1000;
-    server.send(200, "text/plain", "KILLED");
+    server.send(200, "text/plain", "KILLED"); 
   });
-  server.on("/arm", []() {
-    motorArmed = true;
-    server.send(200, "text/plain", "ARMED");
+  server.on("/arm", [](){ 
+    motorArmed = true; 
+    server.send(200, "text/plain", "ARMED"); 
   });
-  server.on("/mpu", []() {
-    if (motorArmed) {
+  server.on("/mpu", [](){
+    if(motorArmed){
       server.send(200, "text/plain", "ERROR: Cannot calibrate while armed!");
       return;
     }
     init_mpu();
     server.send(200, "text/plain", "Calibration in progress...");
   });
-  server.on("/clearMpu", []() {
-    if (motorArmed) {
+  server.on("/clearMpu", [](){
+    if(motorArmed){
       server.send(200, "text/plain", "ERROR: Cannot calibrate while armed!");
       return;
     }
-    mpuData = {0, 0, 0, 0, 0};
+    mpuData = {0, 0, 0, 0, 0}; 
     save_Mpu_config();
 
     server.send(200, "text/plain", "MPU Reset");
   });
-  server.on("/update", []() {
+  server.on("/update", [](){
     String axis = server.arg("axis");
     String param = server.arg("param");
     double val = atof(server.arg("value").c_str());
     if (axis == "roll") {
-      if (param == "p")
-        rollPID.p = val;
-      else if (param == "i")
-        rollPID.i = val;
-      else if (param == "d")
-        rollPID.d = val;
+      if(param == "p") rollPID.p = val;
+      else if(param == "i") rollPID.i = val;
+      else if(param == "d") rollPID.d = val;
       pid_roll.setGains(rollPID.p, rollPID.i, rollPID.d);
       save_PID_config();
-    } else if (axis == "pitch") {
-      if (param == "p")
-        pitchPID.p = val;
-      else if (param == "i")
-        pitchPID.i = val;
-      else if (param == "d")
-        pitchPID.d = val;
+    }else if(axis == "pitch"){
+      if (param == "p") pitchPID.p = val;
+      else if(param == "i") pitchPID.i = val;
+      else if(param == "d") pitchPID.d = val;
       pid_pitch.setGains(pitchPID.p, pitchPID.i, pitchPID.d);
       save_PID_config();
-    } else if (axis == "yaw") {
-      if (param == "p")
-        yawPID.p = val;
-      else if (param == "i")
-        yawPID.i = val;
-      else if (param == "d")
-        yawPID.d = val;
+    }
+    else if(axis == "yaw"){
+      if (param == "p") yawPID.p = val;
+      else if(param == "i") yawPID.i = val;
+      else if(param == "d") yawPID.d = val;
       pid_yaw.setGains(yawPID.p, yawPID.i, yawPID.d);
       save_PID_config();
+    }else if(axis == "rate_roll"){
+      if (param == "p") rate_rollPID.p = val;
+      else if(param == "i") rate_rollPID.i = val;
+      else if(param == "d") rate_rollPID.d = val;
+      pid_rate_roll.setGains(rate_rollPID.p, rate_rollPID.i, rate_rollPID.d);
+      save_PID_config();
+    }else if(axis == "rate_pitch"){
+      if (param == "p") rate_pitchPID.p = val;
+      else if(param == "i") rate_pitchPID.i = val;
+      else if(param == "d") rate_pitchPID.d = val;
+      pid_rate_pitch.setGains(rate_pitchPID.p, rate_pitchPID.i, rate_pitchPID.d);
+      save_PID_config();
     }
+    
+    
     server.sendHeader("Location", "/");
     server.send(303);
   });
   server.begin();
 
-  // MPU Setup
+  //MPU Setup
   Wire.begin(8, 9);
   if (!mpu.begin()) {
     Serial.println("MPU Init Failed!");
-    while (1)
-      ;
+    while(1);
   }
   mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
   mpu.setGyroRange(MPU6050_RANGE_250_DEG);
   mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
-
+  
   load_Mpu_config();
-
-  SPI.begin(SCK, MISO, MOSI, CSN);
-  radio.begin();
-
+  
   FL.attach(servo_pins[0]);
   FR.attach(servo_pins[1]);
   BL.attach(servo_pins[2]);
@@ -440,42 +500,93 @@ void setup() {
 
   Serial.print("Prefs load ");
   load_PID_config();
-
+  pid_rate_roll.setBangBang(0);
+  pid_rate_pitch.setBangBang(0);
   pid_roll.setBangBang(0);
   pid_pitch.setBangBang(0);
   pid_yaw.setBangBang(0);
-  pid_roll.setTimeStep(20);
-  pid_pitch.setTimeStep(20);
-  pid_yaw.setTimeStep(20);
+
+  pid_rate_roll.setTimeStep(4);
+  pid_rate_pitch.setTimeStep(4);
+  pid_roll.setTimeStep(4);
+  pid_pitch.setTimeStep(4);
+  pid_yaw.setTimeStep(4);
+
+  pid_rate_roll.setGains(rate_rollPID.p, rate_rollPID.i, rate_rollPID.d);
+  pid_rate_pitch.setGains(rate_pitchPID.p, rate_pitchPID.i, rate_pitchPID.d);
   pid_roll.setGains(rollPID.p, rollPID.i, rollPID.d);
   pid_pitch.setGains(pitchPID.p, pitchPID.i, pitchPID.d);
   pid_yaw.setGains(yawPID.p, yawPID.i, yawPID.d);
 
+  pid_rate_roll.run();
+  pid_rate_pitch.run();
   pid_roll.run();
   pid_pitch.run();
+
+  Serial.println("Drone setup complete");
 }
 
 void loop() {
+  if(radio.available()){
+    radio.read(&receivedData, sizeof(ComData));
+    ComData *data = (ComData*)receivedData;
+
+    if(data->header == 0xAA){
+      lastRecvTime = millis();
+      throttle = map(data->throttle, 1000, 2000, 500, 1500);
+      setpoint_pitch = (data->pitch-1500)*0.02;
+      setpoint_roll = (data->roll-1500)*0.02;
+      setpoint_yaw = (data->yaw-1500)*0.2;
+
+      Serial.print(throttle);
+      Serial.print(" "); 
+      Serial.print(setpoint_roll);
+      Serial.print(" ");      Serial.print(setpoint_pitch);
+      Serial.print(" ");      Serial.println(setpoint_yaw);
+
+      if(data->emergency_stop == 1){
+        motorArmed = false;
+        throttle = 1000;
+        Serial.println("Emergency Stop Activated!");
+      }
+
+      if(data->start_up == 1){
+        motorArmed = true;
+        Serial.println("Motors Armed!");
+      }
+    }
+  }else{
+    // Check for signal loss
+    if (motorArmed && (millis() - lastRecvTime > 1000)) {
+      motorArmed = false;
+      throttle = 1000;
+      Serial.println("Fail-safe Activated: NRF24 Signal Lost!");
+    }
+  }
+
+  // if (motorArmed && (millis() - lastRecvTime > 1000)) {
+  //   motorArmed = false;
+  //   throttle = 1000;
+  //   Serial.println("Fail-safe Activated: NRF24 Signal Lost!");
+  // }
+
+
   server.handleClient();
   client_count = WiFi.softAPgetStationNum();
   sensors_event_t a, g, temp;
   mpu.getEvent(&a, &g, &temp);
 
-  if (client_count == 0) {
-    motorArmed = false; // 沒有 WiFi 連線時自動鎖定
-  }
+  // if (client_count == 0) {
+  //   motorArmed = false;
+  // }
 
   unsigned long current_time = micros();
-  if (prev_time == 0)
-    prev_time = current_time;
+  if (prev_time == 0) prev_time = current_time;
   dt = (current_time - prev_time) / 1000000.0;
   prev_time = current_time;
 
   float raw_roll_angle = atan2(a.acceleration.z, a.acceleration.x) * 57.296;
-  float raw_pitch_angle =
-      atan2(-a.acceleration.y, sqrt(a.acceleration.x * a.acceleration.x +
-                                    a.acceleration.z * a.acceleration.z)) *
-      57.296; // 其實我也不知道這段是怎麼來的
+  float raw_pitch_angle = atan2(-a.acceleration.y, sqrt(a.acceleration.x * a.acceleration.x + a.acceleration.z * a.acceleration.z)) * 57.296;
   float final_acc_roll = raw_roll_angle - mpuData.roll_off;
   float final_acc_pitch = raw_pitch_angle - mpuData.pitch_off;
   float gyro_roll_rate = (g.gyro.y - mpuData.gyro_y_off) * 57.296;
@@ -486,16 +597,15 @@ void loop() {
   pitch = 0.98 * (pitch + gyro_pitch_rate * dt) + 0.02 * final_acc_pitch;
   yaw += gyro_yaw_rate * dt;
 
-  if (millis() - lastLoopTime >= 20) {
-    lastLoopTime = millis();
-    Serial.print("Roll:");
-    Serial.print(roll - 90);
-    Serial.print(" Pitch:");
-    Serial.print(pitch);
-    Serial.print(" Yaw: ");
-    Serial.println(gyro_yaw_rate);
+  // Serial.print(roll-90);
+  // Serial.print(" ");
+  // Serial.println(pitch);
 
-    if (throttle < 1050 || !motorArmed) {
+  if (millis() - lastLoopTime >= 4) {
+    lastLoopTime = millis();
+
+
+    if(throttle < 1050 || !motorArmed){
       pid_roll.stop();
       pid_roll.reset();
       output_roll = 0;
@@ -507,20 +617,43 @@ void loop() {
       pid_yaw.stop();
       pid_yaw.reset();
       output_yaw = 0;
-    } else {
-      input_roll = roll - 90;
-      input_pitch = pitch;
-      input_yaw = yaw;
 
-      pid_roll.run();
-      pid_pitch.run();
-      pid_yaw.run();
+      pid_rate_roll.stop();
+      pid_rate_roll.reset();
+      output_rate_roll = 0;
+
+      pid_rate_pitch.stop();
+      pid_rate_pitch.reset();
+      output_rate_pitch = 0;
+    }else {
+        if(abs(roll - 90) > 45 || abs(pitch) > 45){
+          motorArmed = false;
+            Serial.println("Emergency Stop: Angle Exceeded");
+        }
+        
+        input_roll = roll - 90;
+        input_pitch = pitch;
+        input_yaw = yaw;
+
+        pid_roll.run();
+        pid_pitch.run();
+        pid_yaw.run();
+
+        setpoint_rate_roll = output_roll;
+        setpoint_rate_pitch = output_pitch;
+
+        input_rate_roll = gyro_roll_rate;
+        input_rate_pitch = -gyro_pitch_rate;
+
+        pid_rate_roll.run();
+        pid_rate_pitch.run();
     }
 
-    int fl = constrain(throttle + output_roll - output_pitch, 1000, 1800);
-    int fr = constrain(throttle - output_roll - output_pitch, 1000, 1800);
-    int bl = constrain(throttle + output_roll + output_pitch, 1000, 1800);
-    int br = constrain(throttle - output_roll + output_pitch, 1000, 1800);
+
+    int fl = constrain(throttle + output_rate_roll - output_rate_pitch, 1000, 1800);
+    int fr = constrain(throttle - output_rate_roll - output_rate_pitch, 1000, 1800);
+    int bl = constrain(throttle + output_rate_roll + output_rate_pitch, 1000, 1800);
+    int br = constrain(throttle - output_rate_roll + output_rate_pitch, 1000, 1800);
 
     if (motorArmed) {
       FL.writeMicroseconds(fl);

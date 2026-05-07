@@ -109,6 +109,20 @@ const App: FC = () => {
     socket.on('connect', () => setStatus('Connected'));
     socket.on('disconnect', () => setStatus('Disconnected'));
 
+    // 啟動時自動連上次選的 serial port
+    const saved = localStorage.getItem("otherSettings")
+    if (saved) {
+      const parsed = JSON.parse(saved)
+      if (parsed.reciver) {
+        fetch('http://localhost:5000/set_port', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ port: parsed.reciver })
+        }).then(res => res.json()).then(d => console.log('[auto set_port]', d))
+          .catch(err => console.error('Error auto setting port:', err))
+      }
+    }
+
     let rafId: number
     function updateLive(): void {
       const pads = navigator.getGamepads ? Array.from(navigator.getGamepads()).filter(Boolean) as Gamepad[] : []
@@ -138,8 +152,8 @@ const App: FC = () => {
           return idx !== null && idx !== undefined ? (pad.buttons[idx] ?? 0) : 0
         }
 
-        const throttle = Math.round(((getAxis('altitude') + 1) / 2) * 1000 + 1000)
-        const pitch = Math.round(((getAxis('pitch') + 1) / 2) * 1000 + 1000)
+        const throttle = Math.round(((getAxis('throttle') + 1) / 2) * -1000 + 2000)
+        const pitch = Math.round(((getAxis('pitch') + 1) / 2) * -1000 + 2000)
         const yaw = Math.round(((getAxis('yaw') + 1) / 2) * 1000 + 1000)
         const roll = Math.round(((getAxis('roll') + 1) / 2) * 1000 + 1000)
         const estop = getBtn('emergency stop') > 0.5 ? 1 : 0
@@ -170,6 +184,20 @@ const App: FC = () => {
     }
   }, [])
 
+  const axisMapping = JSON.parse(localStorage.getItem('axisMapping') || '{}') as Record<string, number | null>
+  const joystickIndex = (JSON.parse(localStorage.getItem('joystickIndex') || '0')) as number
+  const activePad = joystickLiveData[joystickIndex]
+
+  const getDisplayValue = (key: string): string => {
+    const idx = axisMapping[key]
+    const val = activePad && idx !== null && idx !== undefined ? (activePad.axes[idx] ?? 0) : 0
+    if (key === 'throttle' || key === 'pitch') {
+      return String(Math.round(((val + 1) / 2) * -1000 + 2000))
+    } else {
+      return String(Math.round(((val + 1) / 2) * 1000 + 1000))
+    }
+  }
+
   return (
     <div id="app-wrapper" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div id='digital_display'>
@@ -182,11 +210,11 @@ const App: FC = () => {
         </div>
       </div>
       <div id='other_display'>
-        <OtherDataItem title='COURSE' return_data=' ' />
+        <OtherDataItem title='COURSE' return_data={getDisplayValue('yaw')} />
         <OtherDataItem title='HEIGHT' return_data=' ' />
-        <OtherDataItem title='ROLL' return_data=' ' />
-        <OtherDataItem title='PITCH' return_data=' ' />
-        <OtherDataItem title='THROTTLE' return_data=' ' />
+        <OtherDataItem title='ROLL' return_data={getDisplayValue('roll')} />
+        <OtherDataItem title='PITCH' return_data={getDisplayValue('pitch')} />
+        <OtherDataItem title='THROTTLE' return_data={getDisplayValue('throttle')} />
       </div>
       <SideUpBar open={sideUpBarOpen} setOpen={setSideUpBarOpen} />
       <SettingBtn onClick={() => { setShowSetting(true); setSettingPage(''); }} />

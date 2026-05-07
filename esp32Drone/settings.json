@@ -15,7 +15,7 @@
   },
   "otherSettings": {
     "imageTransmission": "0",
-    "reciver": "null",
+    "reciver": "COM3",
     "transmissionPower": "Low",
     "LAWSE": "1",
     "sharpen": "0",
