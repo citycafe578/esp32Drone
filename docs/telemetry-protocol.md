@@ -36,10 +36,23 @@
 * 3 秒沒有新資料，前端把圖示變灰並顯示 `GPS LOST`。
 * 有定位資料時會自動錄成飛行紀錄，10 秒沒有資料就存成 `data/flights/flight_YYYYmmdd_HHMMSS.json`。
 
-## 韌體要做什麼 (之後)
+## 飛機 → 地面站 ESP-NOW 遙測封包 (type = 2)
 
-地面站韌體只要在收到飛機的 GPS 後，往 `Serial.println()` 或 WebSocket 文字訊框送一行 `GEO,<geohash>,<heading>,<alt>,...` 即可，
-不需要再改橋接程式。
+地面站已能接收並轉成 `GEO,...` 文字行送給電腦。**飛機端尚未送出此封包**，需要在 `hardware/drone/main.cpp` 補上。
+
+| 欄位 | 型別 | 說明 |
+|------|------|------|
+| type | uint8 | 固定 2 |
+| geohash | char[12] | 無定位時全 0 |
+| heading | int16 | 度，0=北 |
+| alt_cm | int16 | 公分 |
+| speed_cms | uint16 | 公分/秒 |
+| battery_mv | uint16 | 毫伏 |
+| sats | uint8 | 衛星數 |
+| roll_cd / pitch_cd | int16 | 百分之一度 |
+| flags | uint8 | bit0 = 飛機已解鎖 |
+
+地面站每 0.5 秒另送 `STATUS,...` 給電腦 (見 architecture.md)，電腦以此判斷飛機是否仍在回傳。
 
 ## 測試
 

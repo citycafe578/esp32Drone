@@ -15,6 +15,7 @@ import Hud from './components/Hud/Hud'
 import JoystickSetting from './components/settings/JoystickSetting/JoystickSetting'
 import DroneSetting from './components/settings/DroneSetting/DroneSetting'
 import FlightRecords from './components/settings/FlightRecords/FlightRecords'
+import TuningSetting from './components/settings/TuningSetting/TuningSetting'
 import OtherSetting from './components/settings/OtherSetting/OtherSetting'
 import { formatDistance } from './lib/geo'
 
@@ -52,6 +53,7 @@ interface SettingEntry {
 const SETTING_ENTRIES: SettingEntry[] = [
   { key: 'joystick', title: 'Joystick Settings', image: '/joystick.png' },
   { key: 'drone', title: 'Drone Settings', image: '/drone.png' },
+  { key: 'tuning', title: 'PID & Calibration', image: '/gear.png' },
   { key: 'flight', title: 'Flight Records', image: '/folder.png' },
   { key: 'other', title: 'Other Settings', image: '/gear.png' },
 ]
@@ -111,6 +113,7 @@ const Dashboard: FC = () => {
     switch (settingPage) {
       case 'joystick': return <JoystickSetting />
       case 'drone': return <DroneSetting />
+      case 'tuning': return <TuningSetting />
       case 'flight': return <FlightRecords />
       case 'other': return <OtherSetting theme={theme} setTheme={setTheme} />
       default:

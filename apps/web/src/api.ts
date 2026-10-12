@@ -36,6 +36,10 @@ export const api = {
   clearTrail: () => post('/trail/clear'),
   sim: (enabled: boolean) => post<{ sim: boolean }>('/sim', { enabled }),
 
+  tuning: () => req<{ pid: Record<string, { p: number; i: number; d: number }> }>('/tuning'),
+  setPid: (axis: string, param: string, value: number) => post('/tuning/pid', { axis, param, value }),
+  mpu: (action: 'calibrate' | 'clear') => post(`/tuning/mpu/${action}`),
+
   waypoints: () => req<{ waypoints: LatLng[] }>('/waypoints'),
   saveWaypoints: (waypoints: LatLng[]) => post('/waypoints', waypoints),
 

@@ -3,7 +3,7 @@
 ESP32 無人機的地面控制站 (GCS)：用搖桿在電腦上操控、看即時影像、在地圖上看到無人機位置。
 
 ```
-搖桿 ─▶ React 介面 ──Socket.IO──▶ Python 橋接程式 ──Wi‑Fi WebSocket / USB 序列埠──▶ 地面站 ESP32 ──ESP‑NOW──▶ 飛機 ESP32
+搖桿 ─▶ React 介面 ──Socket.IO──▶ Python 橋接程式 ──USB 序列埠 (預設) 或 Wi‑Fi WebSocket──▶ 地面站 ESP32 ──ESP‑NOW──▶ 飛機 ESP32
           ▲                          │  ▲
           └────── 遙測 (Geohash) ◀────┘  └── 相機 (OpenCV MJPEG)
 ```

@@ -3,7 +3,7 @@
 兩種後端，介面相同：
   WifiLink   : 連到地面站 ESP32 的 SoftAP (Drone_GCS_Relay)，用 WebSocket 送控制、
                用 HTTP /arm /kill 解鎖與鎖定。與 hardware/ground 現有韌體相容。
-  SerialLink : USB 序列埠 (舊版 ComData 封包)，保留給未來韌體。
+  SerialLink : USB 序列埠 (二進位幀 + CRC，見 protocol.py)。地面站同時回傳 STATUS / GEO / PID 文字行。
 
 兩者都會把收到的文字行交給 on_text()，供遙測 (Geohash / GPS) 解析。
 """
@@ -142,15 +142,18 @@ class WifiLink(BaseLink):
             self.detail = f'傳送失敗：{e}'
             return False
 
+    def http_get(self, path: str, timeout: float = 2.0) -> Optional[str]:
+        """對地面站發 HTTP GET，成功回傳內容，失敗回傳 None。"""
+        try:
+            with urllib.request.urlopen(f'http://{self._name}:{self._http_port}{path}', timeout=timeout) as r:
+                if 200 <= r.status < 300:
+                    return r.read().decode('utf-8', errors='replace')
+        except (urllib.error.URLError, OSError):
+            pass
+        return None
+
     def _http(self, path: str, retries: int = 1) -> bool:
-        for _ in range(retries):
-            try:
-                with urllib.request.urlopen(f'http://{self._name}:{self._http_port}{path}', timeout=1.5) as r:
-                    if 200 <= r.status < 300:
-                        return True
-            except (urllib.error.URLError, OSError):
-                pass
-        return False
+        return any(self.http_get(path, timeout=1.5) is not None for _ in range(retries))
 
     def arm(self) -> bool:
         return self._http('/arm')
@@ -161,13 +164,31 @@ class WifiLink(BaseLink):
 
 
 class SerialLink(BaseLink):
+    """電腦 <-> 地面站 ESP32 (USB 序列)。地面站是「已解鎖」狀態的唯一依據：
+    ARM / KILL 以 CONTROL 幀的 cmd 欄位送出，並以地面站回傳的 STATUS 確認。"""
+
     mode = 'serial'
+    STATUS_TIMEOUT_S = 3.0
 
     def __init__(self, on_text, port: str):
+        self._port_open = False
+        self._vitals_at = 0.0
         super().__init__(on_text)
         self.port = port
         self._ser = None
         self._lock = threading.Lock()
+        self._vitals: dict = {}
+        self._pid: dict = {}
+        self._pid_cv = threading.Condition()
+
+    # 「已連線」= 序列埠已開啟，而且地面站有在回 STATUS (舊韌體不會回，所以不會誤判成可用)
+    @property
+    def connected(self) -> bool:
+        return self._port_open and (time.monotonic() - self._vitals_at) < self.STATUS_TIMEOUT_S
+
+    @connected.setter
+    def connected(self, value: bool) -> None:
+        self._port_open = bool(value)
 
     def _run(self) -> None:
         if serial is None:
@@ -180,18 +201,32 @@ class SerialLink(BaseLink):
                 self._stop.wait(1.5)  # 等 ESP32 重開機完成
                 ser.reset_input_buffer()
                 self._ser = ser
-                self.connected = True
-                self.detail = f'已連線 {self.port}'
+                self._port_open = True
                 while not self._stop.is_set():
-                    line = ser.readline()
-                    if line:
-                        self._on_text(line.decode('utf-8', errors='ignore').strip())
+                    raw = ser.readline()
+                    if raw:
+                        self._handle_line(raw.decode('utf-8', errors='ignore').strip())
             except Exception as e:  # noqa: BLE001
                 self.detail = f'序列埠錯誤：{e}'
             finally:
-                self.connected = False
+                self._port_open = False
                 self._close()
             self._stop.wait(1.0)
+
+    def _handle_line(self, line: str) -> None:
+        if line.startswith('STATUS,'):
+            v = protocol.parse_status(line)
+            if v:
+                self._vitals = v
+                self._vitals_at = time.monotonic()
+        elif line.startswith('PID,'):
+            parsed = protocol.parse_pid_line(line)
+            if parsed:
+                with self._pid_cv:
+                    self._pid[parsed[0]] = parsed[1]
+                    self._pid_cv.notify_all()
+        elif line:
+            self._on_text(line)  # GEO 等遙測，其餘 (除錯訊息) 會被解析器忽略
 
     def _close(self) -> None:
         with self._lock:
@@ -202,25 +237,82 @@ class SerialLink(BaseLink):
             except Exception:  # noqa: BLE001
                 pass
 
-    def send_control(self, st, armed) -> bool:
+    def _write(self, data: bytes) -> bool:
         ser = self._ser
-        if ser is None or not self.connected:
+        if ser is None or not self._port_open:
             return False
         try:
             with self._lock:
-                ser.write(protocol.pack_serial(st, armed))
+                ser.write(data)
             return True
         except Exception as e:  # noqa: BLE001
-            self.connected = False
+            self._port_open = False
             self.detail = f'傳送失敗：{e}'
             return False
 
-    # 序列封包本身就帶著 start_up / emergency_stop，不需要額外指令
+    def _wait(self, predicate, timeout: float) -> bool:
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            if predicate():
+                return True
+            time.sleep(0.02)
+        return predicate()
+
+    # ── 上行 ──────────────────────────────────────────────────────
+    def send_control(self, st, armed) -> bool:
+        return self._write(protocol.pack_control_frame(st))
+
+    def send_command(self, cmd: int, repeat: int = 1) -> bool:
+        ok = True
+        for n in range(repeat):
+            ok = self._write(protocol.pack_control_frame(protocol.ControlState.neutral(), cmd)) and ok
+            if n + 1 < repeat:
+                time.sleep(0.02)
+        return ok
+
     def arm(self) -> bool:
-        return self.connected
+        sent_at = time.monotonic()
+        if not self.send_command(protocol.CMD_ARM):
+            return False
+        # 等地面站下一筆 STATUS 回報「已解鎖」
+        return self._wait(lambda: self._vitals_at > sent_at and self._vitals.get('ground_armed') is True, 1.5)
 
     def kill(self) -> bool:
-        return self.connected
+        return self.send_command(protocol.CMD_KILL, repeat=3)
+
+    def send_tune(self, axis: str, p: float, i: float, d: float) -> bool:
+        return self._write(protocol.pack_tune_frame(axis, p, i, d))
+
+    def request_pid(self, timeout: float = 1.5) -> dict:
+        with self._pid_cv:
+            self._pid.clear()
+        if not self._write(protocol.pack_get_pid_frame()):
+            return {}
+        deadline = time.monotonic() + timeout
+        with self._pid_cv:
+            while len(self._pid) < 5 and time.monotonic() < deadline:
+                self._pid_cv.wait(max(0.0, deadline - time.monotonic()))
+            return dict(self._pid)
+
+    # ── 狀態 ──────────────────────────────────────────────────────
+    def status(self) -> dict:
+        st = super().status()
+        if self._port_open and not self.connected:
+            st['detail'] = f'已開啟 {self.port}，但地面站沒有回應 (請確認接的是 ground ESP32 且韌體已更新)'
+        elif self.connected:
+            st['detail'] = f'已連線 {self.port}'
+        v = self._vitals
+        if self.connected and v:
+            age = v.get('drone_rx_age_ms')
+            if age is not None:
+                age += int((time.monotonic() - self._vitals_at) * 1000)
+            st.update({
+                'ground_armed': v['ground_armed'],
+                'drone_rx_age_ms': age,
+                'drone_armed': v['drone_armed'],
+                'roll': v['roll'], 'pitch': v['pitch'], 'battery': v['battery'],
+            })
+        return st
 
 
 class LinkManager:

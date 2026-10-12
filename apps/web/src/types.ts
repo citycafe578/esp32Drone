@@ -24,6 +24,12 @@ export interface LinkStatus {
   mode: string
   connected: boolean
   detail: string
+  ground_armed?: boolean
+  drone_rx_age_ms?: number | null
+  drone_armed?: boolean | null
+  roll?: number
+  pitch?: number
+  battery?: number
 }
 
 export interface ControlState {

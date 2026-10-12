@@ -25,6 +25,7 @@ from camera import CameraManager  # noqa: E402
 from control import ControlSession  # noqa: E402
 from link import LinkManager  # noqa: E402
 from sim import Simulator  # noqa: E402
+import tuning  # noqa: E402
 from telemetry import TelemetryHub  # noqa: E402
 
 try:
@@ -226,6 +227,32 @@ def sim_route():
     enabled = bool((request.get_json(silent=True) or {}).get('enabled', not simulator.running))
     simulator.start() if enabled else simulator.stop()
     return jsonify({'status': 'ok', 'sim': enabled})
+
+
+# ── PID 調參 / MPU 校正 (轉送到地面站既有的 HTTP 端點) ───────────────────────────
+@app.errorhandler(tuning.TuningError)
+def tuning_error(e: tuning.TuningError):
+    return bad_request(str(e), e.status)
+
+
+@app.get('/tuning')
+def tuning_get():
+    return jsonify({'pid': tuning.read_pid(links.link)})
+
+
+@app.post('/tuning/pid')
+def tuning_set_pid():
+    b = request.get_json(silent=True) or {}
+    tuning.set_pid(links.link, b.get('axis'), b.get('param'), b.get('value'))
+    return jsonify({'status': 'ok'})
+
+
+@app.post('/tuning/mpu/<action>')
+def tuning_mpu(action: str):
+    if action not in ('calibrate', 'clear'):
+        return bad_request('unknown action', 404)
+    tuning.mpu(links.link, clear=(action == 'clear'), armed=control.armed)
+    return jsonify({'status': 'ok'})
 
 
 # ── 航點 ──────────────────────────────────────────────────────────────────

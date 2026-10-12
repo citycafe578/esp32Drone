@@ -25,7 +25,7 @@ const DEFAULTS: OtherSettings = {
   LAWSE: 'Sound Effect 1',
   sharpen: '0',
   grayscale: '0',
-  linkMode: 'wifi',
+  linkMode: 'serial',
   groundHost: '192.168.4.1',
   deadzone: '5',
 }
@@ -120,8 +120,8 @@ const OtherSetting: FC<OtherSettingProps> = ({ theme, setTheme }) => {
         <div className='settings'>
           <h1>Ground Station Link</h1>
           <select value={s.linkMode} onChange={e => update('linkMode', e.target.value)}>
-            <option value='wifi'>Wi-Fi (Drone_GCS_Relay)</option>
-            <option value='serial'>USB Serial</option>
+            <option value='wifi'>Wi-Fi (地面站 AP，需 Wi-Fi 版韌體)</option>
+            <option value='serial'>USB Serial (預設，地面站 ESP32)</option>
           </select>
         </div>
 

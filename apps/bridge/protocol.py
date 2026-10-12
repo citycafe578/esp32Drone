@@ -1,18 +1,21 @@
-"""控制封包 / 遙測封包的格式定義 (前後端與韌體之間的約定集中在這裡)。
+"""控制封包 / 遙測文字的格式定義 (電腦、地面站、飛機之間的約定集中在這裡)。
+
+整體鏈路：電腦 --(USB 序列 或 Wi‑Fi)--> 地面站 ESP32 --(ESP-NOW)--> 飛機 ESP32
 
 【上行：電腦 -> 地面站】
-  wifi   : WebSocket (ws://<地面站>:81/) 二進位 10 bytes，小端：
-           uint16 throttle, int16 roll, int16 pitch, int16 yaw, int16 保留(0)
-           這與 hardware/ground 現有韌體 (手機網頁用的格式) 完全一致。
-           解鎖 / 鎖定走 HTTP GET /arm、/kill。
-  serial : 舊版 USB 序列封包 (ComData)，保留給未來韌體使用。
+  serial (預設) : 二進位幀  0xA5 0x5A | type | len | payload | crc8
+                  type 0x01 CONTROL (throttle,roll,pitch,yaw,cmd) / 0x02 TUNE / 0x03 GET_PID
+                  C++ 實作在 hardware/ground/serial_link.h，兩邊由 tests/test_firmware_protocol.py 互相驗證。
+  wifi          : WebSocket (ws://<地面站>:81/) 二進位 10 bytes，小端：
+                  uint16 throttle, int16 roll, int16 pitch, int16 yaw, int16 保留(0)
+                  這是地面站手機網頁用的格式；解鎖 / 鎖定走 HTTP GET /arm、/kill。
 
-【下行：地面站 / 飛機 -> 電腦】 (遙測，每行一筆，文字)
-  1. JSON : {"geohash":"wsqqqxy1k","heading":123.4,"alt":1.8,"speed":0.6,"battery":11.7,"sats":9}
-  2. CSV  : GEO,<geohash>[,heading[,alt[,speed[,battery[,sats]]]]]   (空欄位表示沒有資料)
-  3. 純文字 geohash : wsqqqxy1k
-  單位：heading=度(0=北,順時針)、alt=公尺、speed=公尺/秒、battery=伏特。
+【下行：地面站 -> 電腦】 (文字，每行一筆，serial 與 wifi 相同)
+  GEO,<geohash>,<heading>,<alt m>,<speed m/s>,<battery V>,<sats>   位置 (見下方 parse_telemetry)
+  STATUS,<地面站已解鎖>,<距上次收到飛機 ms>,<飛機已解鎖>,<roll>,<pitch>,<電池 V>
+  PID,<axis>,<p>,<i>,<d>                                           回應 GET_PID
 """
+
 from __future__ import annotations
 
 import json
@@ -72,15 +75,70 @@ def pack_wifi(st: ControlState) -> bytes:
     return struct.pack('<Hhhhh', st.throttle, st.roll, st.pitch, st.yaw, 0)
 
 
-def pack_serial(st: ControlState, armed: bool) -> bytes:
-    """舊版序列封包：0xAA, 0x01, 9 個 int16。"""
-    return struct.pack(
-        '<BBhhhhhhhhh', 0xAA, 0x01,
-        st.throttle, st.pitch, st.yaw, st.roll,
-        1 if st.emergency_stop else 0,
-        1 if armed else 0,
-        st.speed_mode, st.obstacle_avoidance, st.still_dont_know,
-    )
+# ── USB 序列幀 (電腦 -> 地面站) ──────────────────────────────────────────────
+
+MAGIC = b'\xa5\x5a'
+FRAME_CONTROL, FRAME_TUNE, FRAME_GET_PID = 0x01, 0x02, 0x03
+CMD_NONE, CMD_ARM, CMD_KILL, CMD_MPU_CALIBRATE, CMD_MPU_CLEAR = 0, 1, 2, 3, 4
+AXIS_FIELD_BYTES = 16
+
+
+def crc8(data: bytes, crc: int = 0) -> int:
+    """CRC-8，多項式 0x07、初值 0 (與 serial_link.h 相同)。"""
+    for byte in data:
+        crc ^= byte
+        for _ in range(8):
+            crc = ((crc << 1) ^ 0x07) & 0xFF if crc & 0x80 else (crc << 1) & 0xFF
+    return crc
+
+
+def frame(ftype: int, payload: bytes = b'') -> bytes:
+    body = bytes([ftype, len(payload)]) + payload
+    return MAGIC + body + bytes([crc8(body)])
+
+
+def pack_control_frame(st: ControlState, cmd: int = CMD_NONE) -> bytes:
+    return frame(FRAME_CONTROL, struct.pack('<Hhhhh', st.throttle, st.roll, st.pitch, st.yaw, cmd))
+
+
+def pack_tune_frame(axis: str, p: float, i: float, d: float) -> bytes:
+    raw = axis.encode('ascii')
+    if not raw or len(raw) >= AXIS_FIELD_BYTES:
+        raise ValueError('axis name too long')
+    return frame(FRAME_TUNE, struct.pack('<16sfff', raw, p, i, d))
+
+
+def pack_get_pid_frame() -> bytes:
+    return frame(FRAME_GET_PID)
+
+
+def parse_status(line: str) -> Optional[dict[str, Any]]:
+    """STATUS,<g_armed>,<age_ms>,<d_armed>,<roll>,<pitch>,<battery V>"""
+    parts = line.strip().split(',')
+    if len(parts) != 7 or parts[0] != 'STATUS':
+        return None
+    try:
+        g_armed, age, d_armed = int(parts[1]), int(parts[2]), int(parts[3])
+        roll, pitch, bat = float(parts[4]), float(parts[5]), float(parts[6])
+    except ValueError:
+        return None
+    return {
+        'ground_armed': g_armed == 1,
+        'drone_rx_age_ms': None if age < 0 else age,
+        'drone_armed': None if d_armed < 0 else d_armed == 1,
+        'roll': roll, 'pitch': pitch, 'battery': bat,
+    }
+
+
+def parse_pid_line(line: str) -> Optional[tuple[str, dict[str, float]]]:
+    """PID,<axis>,<p>,<i>,<d>"""
+    parts = line.strip().split(',')
+    if len(parts) != 5 or parts[0] != 'PID':
+        return None
+    try:
+        return parts[1], {'p': float(parts[2]), 'i': float(parts[3]), 'd': float(parts[4])}
+    except ValueError:
+        return None
 
 
 # ── 遙測解析 ────────────────────────────────────────────────────────────────

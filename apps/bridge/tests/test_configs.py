@@ -26,7 +26,7 @@ def test_migrates_legacy_file(tmp_path, monkeypatch):
     assert s['btnMapping']['obstacle avoidance'] == 4
     assert s['droneSettings']['imageHorizontalFlip'] == 'True'
     assert s['droneSettings']['geoFenceRadius'] == 'OFF'
-    assert s['otherSettings']['reciver'] == 'COM3' and s['otherSettings']['linkMode'] == 'wifi'
+    assert s['otherSettings']['reciver'] == 'COM3' and s['otherSettings']['linkMode'] == 'serial'
     assert json.loads(path.read_text(encoding='utf-8')) == s  # 已寫回新格式
 
 
@@ -41,7 +41,7 @@ def test_set_section_merges_and_validates(tmp_path, monkeypatch):
     c, _ = load_configs(tmp_path, monkeypatch)
     c.load()
     out = c.set_section('otherSettings', {'sharpen': '50'})
-    assert out['sharpen'] == '50' and out['linkMode'] == 'wifi'
+    assert out['sharpen'] == '50' and out['linkMode'] == 'serial'
     assert c.set_section('waypoints', [{'lat': 1, 'lng': 2}, {'lat': 999, 'lng': 0}, {'x': 1}]) == [{'lat': 1.0, 'lng': 2.0}]
     for bad in (('nope', {}), ):
         try:

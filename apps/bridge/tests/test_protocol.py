@@ -11,9 +11,19 @@ def test_wifi_packet_matches_ground_firmware():
     assert struct.unpack('<Hhhhh', pkt) == (1234, 1400, 1600, 1450, 0)
 
 
-def test_serial_packet_layout():
-    pkt = protocol.pack_serial(protocol.ControlState(throttle=1100), armed=True)
-    assert pkt[0] == 0xAA and pkt[1] == 0x01 and len(pkt) == 20
+def test_control_frame_layout_and_crc():
+    f = protocol.pack_control_frame(protocol.ControlState(throttle=1100), protocol.CMD_ARM)
+    assert f[0] == 0xA5 and f[1] == 0x5A and f[2] == 0x01 and f[3] == 10
+    assert f[-1] == protocol.crc8(f[2:-1])
+    assert struct.unpack('<Hhhhh', f[4:14])[0] == 1100
+
+
+def test_parse_status_and_pid():
+    s = protocol.parse_status('STATUS,1,230,0,1.5,-2.0,7.4')
+    assert s and s['ground_armed'] and s['drone_rx_age_ms'] == 230 and s['battery'] == 7.4
+    assert protocol.parse_status('STATUS,0,-1,-1,0,0,0')['drone_rx_age_ms'] is None
+    pid = protocol.parse_pid_line('PID,roll,1.0,0.5,0.2')
+    assert pid is not None and pid[0] == 'roll'
 
 
 def test_control_state_sanitizes_input():

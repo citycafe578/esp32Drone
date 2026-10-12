@@ -36,7 +36,7 @@ DEFAULTS: dict[str, Any] = {
         'LAWSE': 'Sound Effect 1',
         'sharpen': '0',
         'grayscale': '0',
-        'linkMode': 'wifi',          # wifi = 連地面站 AP 的 WebSocket；serial = USB 序列埠
+        'linkMode': 'serial',        # serial = USB 接地面站 ESP32 (預設)；wifi = 連地面站 AP 的 WebSocket
         'groundHost': '192.168.4.1',  # 地面站 SoftAP 的預設位址
     },
     'droneSettings': {
@@ -102,7 +102,7 @@ def _migrate(data: dict[str, Any]) -> dict[str, Any]:
     for k in ('imageTransmission', 'sharpen', 'grayscale'):
         other[k] = str(other.get(k, '0') if other.get(k, '') != '' else '0')
     if other.get('linkMode') not in ('wifi', 'serial'):
-        other['linkMode'] = 'wifi'
+        other['linkMode'] = DEFAULTS['otherSettings']['linkMode']
     if not other.get('groundHost'):
         other['groundHost'] = DEFAULTS['otherSettings']['groundHost']
     if other.get('reciver') in (None, 'null'):

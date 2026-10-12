@@ -27,6 +27,7 @@ class ControlSession:
         self._prev_start = 0
         self._prev_estop = 0
         self.armed = False
+        self._armed_at = 0.0
         self._last_report = 0.0
         self._last_reported_armed: bool | None = None
         threading.Thread(target=self._loop, daemon=True, name='control-loop').start()
@@ -54,6 +55,7 @@ class ControlSession:
             self._alert('無法解鎖：請先把油門拉到最低', 'error')
         elif link.arm():
             self.armed = True
+            self._armed_at = time.monotonic()
             self._alert('已解鎖 (ARMED)', 'info')
             self._report(force=True)
         else:
@@ -85,6 +87,11 @@ class ControlSession:
         if not fresh and self.armed:
             self._disarm('控制訊號中斷', level='error')
         link = self._links.link
+        # 地面站自己鎖定了 (失聯保護 / 另一個控制端按了 KILL)：同步，不要繼續以為已解鎖
+        if self.armed and now - self._armed_at > 1.5 and link.status().get('ground_armed') is False:
+            self.armed = False
+            self._alert('地面站已鎖定', 'warning')
+            self._report(force=True)
         if link.connected:
             link.send_control(st, self.armed)
         self._report()

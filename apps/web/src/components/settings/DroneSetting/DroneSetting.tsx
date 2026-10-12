@@ -114,7 +114,7 @@ const DroneSetting: FC = () => {
             </div>
 
             <div className="settings">
-            <h1 style={{ justifyContent: 'left' }}>Auto Return Home (需韌體支援)</h1>
+            <h1 style={{ justifyContent: 'left' }}>Auto Return Home (由電腦端決策，尚未實作)</h1>
             <select
                 value={autoReturnHome}
                 onChange={(e) => setAutoReturnHome(e.target.value)}
@@ -168,7 +168,7 @@ const DroneSetting: FC = () => {
             </div>
 
             <div className="settings">
-            <h1 style={{ justifyContent: 'left' }}>Auto Landing (需韌體支援)</h1>
+            <h1 style={{ justifyContent: 'left' }}>Auto Landing (由電腦端決策，尚未實作)</h1>
             <select
                 value={autoLanding}
                 onChange={(e) => setAutoLanding(e.target.value)}

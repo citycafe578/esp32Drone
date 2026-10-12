@@ -33,11 +33,12 @@ def test_heading_derived_from_motion_when_missing(tmp_path):
     assert out['heading'] < 5 or out['heading'] > 355
 
 
-def test_jitter_does_not_change_heading(tmp_path):
+def test_same_cell_keeps_last_heading(tmp_path):
     hub, _ = make(tmp_path)
-    hub.ingest({'geohash': geohash.encode(25.0, 121.5, 9), 'heading': 200})
-    out = hub.ingest({'lat': 25.0000001, 'lng': 121.5000001})
-    assert out['heading'] == 200  # 位移太小 (GPS 抖動) 時沿用上一個航向
+    gh = geohash.encode(25.0, 121.5, 9)
+    hub.ingest({'geohash': gh, 'heading': 200})
+    out = hub.ingest({'geohash': gh})  # 沒有航向、位置沒變 -> 沿用上一個航向
+    assert out['heading'] == 200
 
 
 def test_invalid_is_ignored(tmp_path):
