@@ -1,0 +1,15 @@
+.hud { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+.hud-chips { position: absolute; top: 8px; left: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+.hud-chip {
+  padding: 3px 8px; border-radius: 999px; font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: 0.04em;
+  background: rgba(15, 18, 24, 0.78); border: 1px solid rgba(255, 255, 255, 0.2); color: #cfd4dc;
+}
+.hud-chip.ok { color: #5be584; border-color: rgba(91, 229, 132, 0.5); }
+.hud-chip.bad { color: #ff6b6b; border-color: rgba(255, 107, 107, 0.6); }
+.hud-toasts { position: absolute; top: 8px; right: 8px; display: flex; flex-direction: column; gap: 6px; align-items: flex-end; max-width: 60%; }
+.hud-toast {
+  padding: 6px 10px; border-radius: 8px; font: 500 13px/1.3 system-ui, sans-serif;
+  background: rgba(15, 18, 24, 0.88); color: #fff; border: 1px solid rgba(255, 255, 255, 0.25);
+}
+.hud-toast.warning { border-color: #ffb020; color: #ffd27a; }
+.hud-toast.error { border-color: #ff6b6b; color: #ff9b9b; }

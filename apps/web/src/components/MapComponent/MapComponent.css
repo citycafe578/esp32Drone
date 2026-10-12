@@ -1,0 +1,109 @@
+.map-outer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: inherit;
+  background: #1b2330;
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+}
+.map-outer.editable { cursor: crosshair; }
+
+.map-rotor {
+  position: absolute;
+  transform-origin: 50% 50%;
+  transition: transform 0.4s ease-out;
+}
+
+/* 抵銷地圖旋轉，讓標籤文字維持正向 */
+.counter {
+  transform: rotate(calc(var(--map-angle) * 1deg));
+  transition: transform 0.4s ease-out;
+}
+
+.map-pin {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 600 12px/1 system-ui, sans-serif;
+  color: #fff;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+.map-pin.wp { background: #ffb020; color: #1b1b1b; }
+.map-pin.home { background: #2ea44f; }
+
+.drone-marker { width: 40px; height: 40px; }
+.drone-marker svg { width: 100%; height: 100%; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.6)); }
+.drone-marker path, .drone-marker circle { fill: #3ea6ff; stroke: #fff; stroke-width: 2; stroke-linejoin: round; }
+.drone-marker.stale path, .drone-marker.stale circle { fill: #8a8f98; }
+
+.map-compass {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(15, 18, 24, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ff5a5a;
+  font: 700 13px/1 system-ui, sans-serif;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 4px;
+  box-sizing: border-box;
+  pointer-events: none;
+  transform: rotate(calc(var(--map-angle) * -1deg));
+  transition: transform 0.4s ease-out;
+}
+
+.map-buttons {
+  position: absolute;
+  right: 10px;
+  bottom: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 500;
+  cursor: default;
+}
+.map-buttons button {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(15, 18, 24, 0.8);
+  color: #e8ebf0;
+  font-size: 15px;
+  cursor: pointer;
+}
+.map-buttons button:hover { border-color: #3ea6ff; }
+.map-buttons button.on { background: #1d5fa8; border-color: #3ea6ff; }
+
+.map-status {
+  position: absolute;
+  left: 10px;
+  bottom: 22px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(15, 18, 24, 0.75);
+  color: #e8ebf0;
+  font: 12px/1.3 ui-monospace, monospace;
+  pointer-events: none;
+}
+.map-attrib {
+  position: absolute;
+  right: 6px;
+  bottom: 2px;
+  font: 10px/1 system-ui, sans-serif;
+  color: rgba(255, 255, 255, 0.7);
+  pointer-events: none;
+}

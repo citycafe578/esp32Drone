@@ -1,0 +1,14 @@
+.fr-root { display: flex; gap: 16px; height: 63vh; width: 100%; }
+.fr-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px; }
+.fr-detail { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 12px; overflow-y: auto; }
+.fr-item {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 10px 12px; text-align: left;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-1); cursor: pointer;
+}
+.fr-item span { font-size: 0.8rem; color: var(--text-2); }
+.fr-item.active, .fr-item:hover { border-color: var(--accent); }
+.fr-track { width: 240px; height: 240px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-md); }
+.fr-detail ul { list-style: none; padding: 0; margin: 0; font-size: 0.85rem; color: var(--text-1); line-height: 1.8; }
+.fr-actions { display: flex; gap: 8px; }
+.fr-empty { color: var(--text-2); font-size: 0.85rem; }
+.fr-error { color: #ff6b6b; font-size: 0.85rem; }

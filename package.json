@@ -1,18 +1,22 @@
 {
-  "devDependencies": {
-    "@types/leaflet": "^1.9.21",
-    "@types/react": "^19.2.8",
-    "@types/react-dom": "^19.2.3",
-    "concurrently": "^9.2.0",
-    "typescript": "^5.9.3"
+  "name": "esp32-drone",
+  "private": true,
+  "version": "0.1.0",
+  "description": "ESP32 drone ground control station: React UI + Python bridge + PlatformIO firmware",
+  "workspaces": ["apps/web"],
+  "scripts": {
+    "dev": "concurrently -n web,bridge -c cyan,yellow \"npm:dev:web\" \"npm:dev:bridge\"",
+    "dev:sim": "concurrently -n web,bridge -c cyan,yellow \"npm:dev:web\" \"npm:dev:bridge:sim\"",
+    "dev:web": "npm run dev --workspace apps/web",
+    "dev:bridge": "python -u apps/bridge/server.py",
+    "dev:bridge:sim": "python -u apps/bridge/server.py --sim",
+    "build": "npm run build --workspace apps/web",
+    "lint": "npm run lint --workspace apps/web",
+    "typecheck": "npm run typecheck --workspace apps/web",
+    "test": "python -m pytest apps/bridge/tests -q",
+    "setup:bridge": "python -m pip install -r apps/bridge/requirements.txt"
   },
-  "dependencies": {
-    "@dnd-kit/core": "^6.3.1",
-    "@dnd-kit/sortable": "^10.0.0",
-    "@dnd-kit/utilities": "^3.2.2",
-    "express": "^5.2.1",
-    "serialport": "^13.0.0",
-    "socket.io": "^4.8.3",
-    "socket.io-client": "^4.8.3"
+  "devDependencies": {
+    "concurrently": "^9.2.0"
   }
 }
