@@ -5,12 +5,16 @@
 #include <WiFi.h>
 #include <esp_now.h>
 #include <esp_wifi.h>
+#include <esp_heap_caps.h>
 #include <Preferences.h>
 
 bool motorArmed = false;
 int throttle = 1000;
 unsigned long lastRecvTime = 0;
 int target_roll = 1500, target_pitch = 1500, target_yaw = 1500;
+TaskHandle_t flightTaskHandle = nullptr;
+TaskHandle_t systemMonitorTaskHandle = nullptr;
+volatile uint32_t flightCoreWorkPercent = 0;
 
 namespace Flight {
     constexpr int MaxThrottle = 1600;
@@ -64,7 +68,7 @@ AutoPID pid_roll(&input_roll, &setpoint_roll, &output_roll, -90, 90, rollPID.p, 
 AutoPID pid_pitch(&input_pitch, &setpoint_pitch, &output_pitch, -90, 90, pitchPID.p, pitchPID.i, pitchPID.d);
 AutoPID pid_yaw(&input_yaw, &setpoint_yaw, &output_yaw, -100, 100, yawPID.p, yawPID.i, yawPID.d);
 
-int servo_pins[4] = {1, 3, 0, 2};
+int servo_pins[4] = {4, 0, 3, 1};
 
 void writeMotorUS(int channel, int us){
     us = constrain(us, 1000, 2000);
@@ -176,6 +180,7 @@ void FlightTask(void *pvParameters) {
     const TickType_t xFrequency = 5 / portTICK_PERIOD_MS; // 200Hz 
 
     while (true) {
+    uint32_t workStart = micros();
         // 掉包一秒強制斷電
         if (motorArmed && (millis() - lastRecvTime > 1000)) {
             motorArmed = false;
@@ -241,13 +246,32 @@ void FlightTask(void *pvParameters) {
         if (motorArmed) { writeMotorUS(0, fl); writeMotorUS(1, fr); writeMotorUS(2, bl); writeMotorUS(3, br); } 
         else { writeMotorUS(0, 1000); writeMotorUS(1, 1000); writeMotorUS(2, 1000); writeMotorUS(3, 1000); }
 
+        uint32_t workTime = micros() - workStart;
+        flightCoreWorkPercent = min<uint32_t>(100, workTime * 100 / 5000);
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
+    }
+}
+
+void SystemMonitorTask(void *pvParameters) {
+    while (true) {
+        Serial.printf(
+            "\n[System] HEAP free=%u min=%u | PSRAM free=%u total=%u | Core work=%u%%\n",
+            ESP.getFreeHeap(),
+            ESP.getMinFreeHeap(),
+            heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+            heap_caps_get_total_size(MALLOC_CAP_SPIRAM),
+            flightCoreWorkPercent);
+        Serial.printf("[Task] FlightTask      stack_left=%u bytes\n",
+                      uxTaskGetStackHighWaterMark(flightTaskHandle) * sizeof(StackType_t));
+        Serial.printf("[Task] SystemMonitor   stack_left=%u bytes\n",
+                      uxTaskGetStackHighWaterMark(systemMonitorTaskHandle) * sizeof(StackType_t));
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 
 void setup() {
     Serial.begin(115200);
-    delay(300);
+    delay(5000);
     Serial.println("\n=== DRONE BOOT (ESP-NOW + AutoPID) ===");
 
     WiFi.mode(WIFI_STA);
@@ -289,7 +313,8 @@ void setup() {
     pid_pitch.setGains(pitchPID.p, pitchPID.i, pitchPID.d);
     pid_yaw.setGains(yawPID.p, yawPID.i, yawPID.d);
 
-    xTaskCreate(FlightTask, "FlightTask", 4096, NULL, 3, NULL);
+    xTaskCreate(FlightTask, "FlightTask", 4096, NULL, 3, &flightTaskHandle);
+    xTaskCreate(SystemMonitorTask, "SystemMonitor", 4096, NULL, 1, &systemMonitorTaskHandle);
 }
 
 void loop() { vTaskDelete(NULL); }
