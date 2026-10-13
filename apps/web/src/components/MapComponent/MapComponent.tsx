@@ -20,6 +20,8 @@ export interface MapProps {
   /** 有給才允許點地圖新增航點 */
   onAddWaypoint?: (p: LatLng) => void
   onSetHome?: () => void
+  /** 清除地圖上所有資料 (軌跡、起飛點、航點) */
+  onClearAll?: () => void
   defaultFollow?: boolean
   defaultRotate?: boolean
 }
@@ -60,7 +62,7 @@ function rotorInverse(rotor: HTMLElement | null): DOMMatrix {
 
 const MapComponent: FC<MapProps> = ({
   telemetry, stale, trail, home, waypoints,
-  onAddWaypoint, onSetHome, defaultFollow = true, defaultRotate = true,
+  onAddWaypoint, onSetHome, onClearAll, defaultFollow = true, defaultRotate = true,
 }) => {
   const outerRef = useRef<HTMLDivElement>(null)
   const rotorRef = useRef<HTMLDivElement>(null)
@@ -215,13 +217,17 @@ const MapComponent: FC<MapProps> = ({
       </div>
 
       <div className="map-ctrl map-buttons">
-        <button title="Zoom in" onClick={() => map?.zoomIn()}>+</button>
-        <button title="Zoom out" onClick={() => map?.zoomOut()}>−</button>
-        <button title="Center on drone" className={follow ? 'on' : ''} onClick={recenter}>◎</button>
-        <button title={rotate ? 'Heading up (click for north up)' : 'North up (click for heading up)'} className={rotate ? 'on' : ''} onClick={() => setRotate(r => !r)}>
+        <button className='btn-icon' title="Zoom in" onClick={() => map?.zoomIn()}>+</button>
+        <button className='btn-icon' title="Zoom out" onClick={() => map?.zoomOut()}>−</button>
+        <button title="Center on drone" className={`btn-icon ${follow ? 'on' : ''}`} onClick={recenter}>◎</button>
+        <button title={rotate ? 'Heading up (click for north up)' : 'North up (click for heading up)'} className={`btn-icon ${rotate ? 'on' : ''}`} onClick={() => setRotate(r => !r)}>
           {rotate ? 'HDG' : 'N'}
         </button>
-        {onSetHome && <button title="Set home here" onClick={onSetHome}>H</button>}
+        {onSetHome && <button className='btn-icon' title="Set home here" onClick={onSetHome}>H</button>}
+        {onClearAll && (
+          <button className='btn-icon' title="Clear all map data (trail, home, waypoints)"
+            onClick={() => { if (window.confirm('清除地圖上所有資料？\n(軌跡、起飛點、航點)')) onClearAll() }}>✕</button>
+        )}
       </div>
 
       <div className="map-status">

@@ -75,18 +75,13 @@
   cursor: default;
 }
 .map-buttons button {
-  min-width: 34px;
-  height: 34px;
-  padding: 0 6px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(15, 18, 24, 0.8);
+  border-color: rgba(255, 255, 255, 0.2);
   color: #e8ebf0;
-  font-size: 15px;
-  cursor: pointer;
+  font-size: 1rem;
 }
-.map-buttons button:hover { border-color: #3ea6ff; }
-.map-buttons button.on { background: #1d5fa8; border-color: #3ea6ff; }
+.map-buttons button:hover:not(:disabled) { background: rgba(15, 18, 24, 0.95); border-color: var(--accent); }
+.map-buttons button.on { background: var(--accent); color: var(--bg); border-color: var(--accent); }
 
 .map-status {
   position: absolute;

@@ -4,7 +4,7 @@
 .tune-table th { color: var(--text-2); font-weight: 500; }
 .tune-table input { width: 110px; }
 .tune-actions { display: flex; gap: 10px; align-items: center; }
-.tune-note { color: #ffb020; font-size: 0.8rem; }
+.tune-note { color: var(--warn); font-size: 0.8rem; }
 .tune-msg { font-size: 0.85rem; margin: 0; }
-.tune-msg.ok { color: #5be584; }
-.tune-msg.bad { color: #ff6b6b; }
+.tune-msg.ok { color: var(--ok); }
+.tune-msg.bad { color: var(--bad); }

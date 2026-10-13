@@ -1,5 +1,7 @@
 import './SideUpBar.css'
+import { useState } from 'react'
 import type { FC } from 'react'
+import FlightRecords from '../settings/FlightRecords/FlightRecords'
 import MapComponent from '../MapComponent/MapComponent'
 import type { MapProps } from '../MapComponent/MapComponent'
 import { formatDistance, haversine } from '../../lib/geo'
@@ -15,6 +17,7 @@ interface SideUpBarProps {
 }
 
 const SideUpBar: FC<SideUpBarProps> = ({ open, setOpen, mapProps, onAddWaypoint, onRemoveWaypoint, onClearWaypoints }) => {
+  const [view, setView] = useState<'autopilot' | 'records'>('autopilot')
   const wps = mapProps.waypoints
   const legs = wps.map((p, i) => (i === 0 ? 0 : haversine(wps[i - 1], p)))
   const total = legs.reduce((a, b) => a + b, 0)
@@ -28,8 +31,12 @@ const SideUpBar: FC<SideUpBarProps> = ({ open, setOpen, mapProps, onAddWaypoint,
         </div>
         <div className="sheet-content">
           <div className="sheet-title">
-            <h2>Autopilot Settings</h2>
+            <select value={view} onChange={e => setView(e.target.value as 'autopilot' | 'records')}>
+              <option value="autopilot">Autopilot Settings</option>
+              <option value="records">Flight Records</option>
+            </select>
           </div>
+          {view === 'records' ? <FlightRecords /> : (
           <div className="sheet-body">
             <div id="auto_pilot_map">
               {/* 抽屜關閉時不需要渲染第二張地圖 */}
@@ -47,7 +54,7 @@ const SideUpBar: FC<SideUpBarProps> = ({ open, setOpen, mapProps, onAddWaypoint,
                       {p.lat.toFixed(5)}, {p.lng.toFixed(5)}
                       {i > 0 && <small> +{formatDistance(legs[i])}</small>}
                     </span>
-                    <button className="wp-remove" title="Remove" onClick={() => onRemoveWaypoint(i)}>×</button>
+                    <button className="wp-remove btn-icon" title="Remove" onClick={() => onRemoveWaypoint(i)}>×</button>
                   </div>
                 ))}
               </div>
@@ -55,6 +62,7 @@ const SideUpBar: FC<SideUpBarProps> = ({ open, setOpen, mapProps, onAddWaypoint,
               <button id="save_and_cancel_btns" onClick={onClearWaypoints} disabled={wps.length === 0}>Clear All</button>
             </div>
           </div>
+          )}
         </div>
       </div>
     </>

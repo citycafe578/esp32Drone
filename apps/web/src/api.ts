@@ -34,6 +34,7 @@ export const api = {
   telemetry: () => req<{ latest: Telemetry | null; home: LatLng | null; sim: boolean; trail: [number, number][] }>('/telemetry'),
   setHome: (p?: LatLng) => post<LatLng>('/home', p),
   clearTrail: () => post('/trail/clear'),
+  clearMap: () => post('/map/clear'),
   sim: (enabled: boolean) => post<{ sim: boolean }>('/sim', { enabled }),
 
   tuning: () => req<{ pid: Record<string, { p: number; i: number; d: number }> }>('/tuning'),

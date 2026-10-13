@@ -37,6 +37,11 @@ class BaseLink:
         self._thread: Optional[threading.Thread] = None
         self.connected = False
         self.detail = ''
+        # 地面站回報的狀態 / PID (兩種連線方式共用同一套文字行)
+        self._vitals: dict = {}
+        self._vitals_at = 0.0
+        self._pid: dict = {}
+        self._pid_cv = threading.Condition()
 
     def start(self) -> None:
         self._stop.clear()
@@ -51,7 +56,37 @@ class BaseLink:
         self.connected = False
 
     def status(self) -> dict:
-        return {'mode': self.mode, 'connected': self.connected, 'detail': self.detail}
+        st = {'mode': self.mode, 'connected': self.connected, 'detail': self.detail}
+        v = self._vitals
+        if self.connected and v:
+            age = v.get('drone_rx_age_ms')
+            if age is not None:
+                age += int((time.monotonic() - self._vitals_at) * 1000)
+            st.update({
+                'ground_armed': v['ground_armed'],
+                'drone_rx_age_ms': age,
+                'drone_armed': v['drone_armed'],
+                'roll': v['roll'], 'pitch': v['pitch'], 'battery': v['battery'],
+                'drone_calibrating': v['drone_calibrating'],
+                'mpu_calibrated': v['mpu_calibrated'],
+            })
+        return st
+
+    def _handle_line(self, line: str) -> None:
+        """地面站送來的一行文字：STATUS / PID 在這裡處理，其餘 (GEO 等遙測) 交給 on_text。"""
+        if line.startswith('STATUS,'):
+            v = protocol.parse_status(line)
+            if v:
+                self._vitals = v
+                self._vitals_at = time.monotonic()
+        elif line.startswith('PID,'):
+            parsed = protocol.parse_pid_line(line)
+            if parsed:
+                with self._pid_cv:
+                    self._pid[parsed[0]] = parsed[1]
+                    self._pid_cv.notify_all()
+        elif line:
+            self._on_text(line)
 
     # 子類別實作
     def _run(self) -> None: ...
@@ -119,7 +154,7 @@ class WifiLink(BaseLink):
             if isinstance(msg, (bytes, bytearray)):
                 msg = bytes(msg).decode('utf-8', errors='ignore')
             for line in str(msg).splitlines():
-                self._on_text(line)
+                self._handle_line(line.strip())
 
     def _close(self) -> None:
         ws, self._ws = self._ws, None
@@ -177,9 +212,6 @@ class SerialLink(BaseLink):
         self.port = port
         self._ser = None
         self._lock = threading.Lock()
-        self._vitals: dict = {}
-        self._pid: dict = {}
-        self._pid_cv = threading.Condition()
 
     # 「已連線」= 序列埠已開啟，而且地面站有在回 STATUS (舊韌體不會回，所以不會誤判成可用)
     @property
@@ -207,26 +239,15 @@ class SerialLink(BaseLink):
                     if raw:
                         self._handle_line(raw.decode('utf-8', errors='ignore').strip())
             except Exception as e:  # noqa: BLE001
-                self.detail = f'序列埠錯誤：{e}'
+                # Windows 的 pyserial 會把「沒有這個 COM 埠」包成 SerialException，訊息裡才有 FileNotFoundError
+                if isinstance(e, FileNotFoundError) or 'FileNotFoundError' in str(e):
+                    self.detail = f'找不到 {self.port}，請確認地面站已接上，或到設定重新選擇序列埠'
+                else:
+                    self.detail = f'序列埠錯誤：{e}'
             finally:
                 self._port_open = False
                 self._close()
             self._stop.wait(1.0)
-
-    def _handle_line(self, line: str) -> None:
-        if line.startswith('STATUS,'):
-            v = protocol.parse_status(line)
-            if v:
-                self._vitals = v
-                self._vitals_at = time.monotonic()
-        elif line.startswith('PID,'):
-            parsed = protocol.parse_pid_line(line)
-            if parsed:
-                with self._pid_cv:
-                    self._pid[parsed[0]] = parsed[1]
-                    self._pid_cv.notify_all()
-        elif line:
-            self._on_text(line)  # GEO 等遙測，其餘 (除錯訊息) 會被解析器忽略
 
     def _close(self) -> None:
         with self._lock:
@@ -301,17 +322,6 @@ class SerialLink(BaseLink):
             st['detail'] = f'已開啟 {self.port}，但地面站沒有回應 (請確認接的是 ground ESP32 且韌體已更新)'
         elif self.connected:
             st['detail'] = f'已連線 {self.port}'
-        v = self._vitals
-        if self.connected and v:
-            age = v.get('drone_rx_age_ms')
-            if age is not None:
-                age += int((time.monotonic() - self._vitals_at) * 1000)
-            st.update({
-                'ground_armed': v['ground_armed'],
-                'drone_rx_age_ms': age,
-                'drone_armed': v['drone_armed'],
-                'roll': v['roll'], 'pitch': v['pitch'], 'battery': v['battery'],
-            })
         return st
 
 

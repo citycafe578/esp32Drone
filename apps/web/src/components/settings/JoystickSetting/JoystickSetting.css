@@ -36,18 +36,6 @@
     left: 50%;
     transform: translateX(-50%);
     min-width: 120px;
-    padding: 7px 18px;
-    font-size: 0.8rem;
-    background: var(--surface-3);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    color: var(--text-1);
-    transition: background var(--transition), border-color var(--transition);
-}
-
-.settings button:hover:not(:disabled) {
-    background: #404040;
-    border-color: var(--accent);
 }
 
 .settings button:disabled {
@@ -91,7 +79,6 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     color: var(--text-1);
-    padding: 7px 12px;
     font-size: 0.85rem;
 }
 

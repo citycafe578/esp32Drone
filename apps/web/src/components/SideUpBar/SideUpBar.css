@@ -90,18 +90,7 @@
 #save_and_cancel_btns {
   flex: 1;
   margin: 0 8px;
-  padding: 10px 0;
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  border: 1px solid var(--border);
   width: 95%;
-  color: var(--text-1);
-  transition: background var(--transition), border-color var(--transition);
-}
-
-#save_and_cancel_btns:hover {
-  background: var(--surface-3);
-  border-color: var(--accent);
 }
 
 .sheet-title {
@@ -152,10 +141,10 @@
 .wp-coord { flex: 1; font-family: ui-monospace, monospace; color: var(--text-1); }
 .wp-coord small { color: var(--text-2); margin-left: 6px; }
 .wp-remove {
-  background: transparent; border: none; color: var(--text-2);
-  font-size: 1.1rem; cursor: pointer; padding: 0 4px;
+  background: transparent; border-color: transparent; color: var(--text-2);
+  font-size: 1.1rem; width: var(--control-h);
 }
-.wp-remove:hover { color: #ff5a5a; }
+.wp-remove:hover:not(:disabled) { color: var(--bad); background: transparent; border-color: transparent; }
 .wp-total { font-size: 0.75rem; color: var(--text-2); padding: 4px 0; }
 #save_and_cancel_btns { flex: 0 0 auto; margin-bottom: 8px; }
 #save_and_cancel_btns:disabled { opacity: 0.4; cursor: not-allowed; }

@@ -2,32 +2,15 @@
   position: fixed;
   right: 14px;
   bottom: 8px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  padding: 6px;
   z-index: 3;
-  transition: background var(--transition), border-color var(--transition), transform var(--transition), box-shadow var(--transition);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .setting-btn:hover {
   background: var(--surface-3);
   border-color: var(--accent);
-  transform: rotate(30deg);
   box-shadow: 0 0 12px rgba(200, 200, 200, 0.15);
 }
 
-.setting-btn img {
-  width: 22px;
-  height: 22px;
-  filter: invert(1);
-  opacity: 0.7;
-  transition: opacity var(--transition);
-}
+.setting-btn:hover img { transform: rotate(30deg); }
 
-.setting-btn:hover img {
-  opacity: 1;
-}
+.setting-btn img { transition: transform var(--transition), opacity var(--transition); }

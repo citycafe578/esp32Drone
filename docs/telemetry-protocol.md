@@ -36,9 +36,17 @@
 * 3 秒沒有新資料，前端把圖示變灰並顯示 `GPS LOST`。
 * 有定位資料時會自動錄成飛行紀錄，10 秒沒有資料就存成 `data/flights/flight_YYYYmmdd_HHMMSS.json`。
 
-## 飛機 → 地面站 ESP-NOW 遙測封包 (type = 2)
+## 飛機 ↔ 地面站 ESP-NOW 封包
 
-地面站已能接收並轉成 `GEO,...` 文字行送給電腦。**飛機端尚未送出此封包**，需要在 `hardware/drone/main.cpp` 補上。
+| type | 方向 | 內容 |
+|------|------|------|
+| 0 | 地面站 → 飛機 | 控制：throttle, roll, pitch, yaw, cmd (0 一般 / 1 ARM / 2 KILL / 3 MPU 校正 / 4 清除校正) |
+| 1 | 地面站 → 飛機 | 調參：axis[16], p, i, d |
+| 2 | 飛機 → 地面站 | 遙測 (每 0.2 秒)，欄位見下表 |
+| 3 | 地面站 → 飛機 | 要求回報目前 PID |
+| 4 | 飛機 → 地面站 | 單一軸的 PID：axis[16], p, i, d (收到 type 3 後逐軸回覆 5 筆) |
+
+遙測封包 (type 2)：
 
 | 欄位 | 型別 | 說明 |
 |------|------|------|
@@ -47,12 +55,25 @@
 | heading | int16 | 度，0=北 |
 | alt_cm | int16 | 公分 |
 | speed_cms | uint16 | 公分/秒 |
-| battery_mv | uint16 | 毫伏 |
+| battery_mv | uint16 | 毫伏，0 = 未量測 |
 | sats | uint8 | 衛星數 |
-| roll_cd / pitch_cd | int16 | 百分之一度 |
-| flags | uint8 | bit0 = 飛機已解鎖 |
+| roll_cd / pitch_cd | int16 | 百分之一度，水平為 0 |
+| flags | uint8 | bit0 已解鎖、bit1 MPU 校正中、bit2 MPU 已校正 |
 
-地面站每 0.5 秒另送 `STATUS,...` 給電腦 (見 architecture.md)，電腦以此判斷飛機是否仍在回傳。
+飛機端 (`hardware/drone/main.cpp`) 的 `TelemetryTask` 負責送出。GPS 與電池是選配，在檔案開頭的設定區改腳位：
+
+* GPS：`GPS_RX_PIN` / `GPS_TX_PIN` / `GPS_BAUD`，預設 20 / 21 / 9600；設 -1 停用。沒有定位時 geohash 為空，地面站不會送 `GEO` 行，只送 `STATUS`。
+* 電池：`BATTERY_ADC_PIN` (預設 -1 停用) 與 `BATTERY_DIVIDER` (電阻分壓倍數)。
+
+MPU 校正不會卡在 ESP-NOW 回呼裡：回呼只設旗標，由 FlightTask 在未解鎖時執行 (約 1.5 秒)，期間 `flags` 的 bit1 為 1。
+
+## 地面站 → 電腦的文字行
+
+不論 USB 序列或 Wi‑Fi (WebSocket 文字訊框)，內容相同：
+
+* `GEO,<geohash>,<heading>,<alt m>,<speed m/s>,<battery V>,<sats>`
+* `STATUS,<地面站解鎖>,<飛機回報距今 ms，-1 為從未收到>,<飛機解鎖，-1 未知>,<roll>,<pitch>,<電池 V>,<飛機旗標>`，每 0.5 秒
+* `PID,<軸>,<p>,<i>,<d>`：收到 GET_PID 後，地面站向飛機要實際的值再轉出；飛機 0.6 秒內沒回的軸用地面站快取補上。Wi‑Fi 模式用 `GET /pid` 取得同樣的文字行。
 
 ## 測試
 

@@ -113,20 +113,27 @@ def pack_get_pid_frame() -> bytes:
 
 
 def parse_status(line: str) -> Optional[dict[str, Any]]:
-    """STATUS,<g_armed>,<age_ms>,<d_armed>,<roll>,<pitch>,<battery V>"""
+    """STATUS,<g_armed>,<age_ms>,<d_armed>,<roll>,<pitch>,<battery V>[,<drone flags>]
+
+    drone flags (飛機回傳的旗標)：bit0 已解鎖, bit1 MPU 校正中, bit2 MPU 已校正。
+    """
     parts = line.strip().split(',')
-    if len(parts) != 7 or parts[0] != 'STATUS':
+    if len(parts) not in (7, 8) or parts[0] != 'STATUS':
         return None
     try:
         g_armed, age, d_armed = int(parts[1]), int(parts[2]), int(parts[3])
         roll, pitch, bat = float(parts[4]), float(parts[5]), float(parts[6])
+        flags = int(parts[7]) if len(parts) == 8 else 0
     except ValueError:
         return None
+    alive = age >= 0
     return {
         'ground_armed': g_armed == 1,
         'drone_rx_age_ms': None if age < 0 else age,
         'drone_armed': None if d_armed < 0 else d_armed == 1,
         'roll': roll, 'pitch': pitch, 'battery': bat,
+        'drone_calibrating': alive and bool(flags & 2),
+        'mpu_calibrated': (bool(flags & 4) if alive else None),
     }
 
 

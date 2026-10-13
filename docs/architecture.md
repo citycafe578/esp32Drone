@@ -11,7 +11,7 @@ flowchart LR
     Flask["Python Flask + Socket.IO<br/>apps/bridge/server.py"]
     Serial["USB Serial (預設，帶 CRC 的幀)<br/>或 Wi-Fi WebSocket :81"]
     Ground["Ground ESP32<br/>hardware/ground/main.cpp"]
-    NRF["ESP-NOW<br/>Channel 1"]
+    ESPNOW["ESP-NOW<br/>Channel 1"]
     Drone["Drone ESP32<br/>hardware/drone/main.cpp"]
     PID["MPU6050 + PID Control"]
     Motors["ESC / Motors<br/>FL FR BL BR"]
@@ -22,8 +22,8 @@ flowchart LR
     Socket --> Flask
     Flask --> Serial
     Serial --> Ground
-    Ground --> NRF
-    NRF --> Drone
+    Ground --> ESPNOW
+    ESPNOW --> Drone
     Drone --> PID
     PID --> Motors
 ```
@@ -220,9 +220,8 @@ flowchart LR
 ## 尚未實作 (需要韌體配合)
 
 * 自動返航 (Auto Return Home)、自動降落 (Auto Landing)、速度模式、避障：設定頁可以存，但韌體端還沒有對應功能。
-* 發射功率 (Transmission Power)：只儲存，沒有送到韌體。
-* 飛機狀態回報 (姿態、電池、解鎖確認)：飛機沒有回傳通道，PID 調參也只知道「地面站收到」，不知道飛機是否套用。
-* 韌體尚未送出 GPS 資料 (見 `telemetry-protocol.md`)。
+* 電池電壓與 GPS：韌體已寫好，但要在 `hardware/drone/main.cpp` 開頭設定腳位並接上硬體才會有資料。
+* 飛機端尚未接上 GPS (見 `telemetry-protocol.md`)，所以地圖沒有位置資料。
 
 ## 序列協定 (電腦 <-> 地面站 ESP32)
 
@@ -235,7 +234,7 @@ flowchart LR
 | `0x02` TUNE | PC → 地面站 | `<16sfff` 軸名, P, I, D (軸名：roll/pitch/yaw/rate_roll/rate_pitch) |
 | `0x03` GET_PID | PC → 地面站 | 無 |
 
-地面站 → 電腦為文字行：`GEO,...` (遙測)、`STATUS,<地面站解鎖>,<飛機封包年齡ms>,<飛機解鎖>,<roll>,<pitch>,<電池V>` (每 0.5 秒)、`PID,<軸>,<p>,<i>,<d>`。
+地面站 → 電腦為文字行：`GEO,...` (遙測)、`STATUS,<地面站解鎖>,<飛機封包年齡ms>,<飛機解鎖>,<roll>,<pitch>,<電池V>,<飛機旗標>` (每 0.5 秒)、`PID,<軸>,<p>,<i>,<d>`。
 
 ## 責任分工
 

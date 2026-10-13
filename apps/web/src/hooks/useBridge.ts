@@ -43,6 +43,13 @@ export function useBridge() {
     api.clearTrail().catch(() => undefined)
   }, [])
 
+  /** 清除軌跡與起飛點 (後端下一筆定位會重設起飛點) */
+  const clearMap = useCallback(() => {
+    setTrail([])
+    setHome(null)
+    api.clearMap().catch(() => undefined)
+  }, [])
+
   const setHomeHere = useCallback(() => {
     api.setHome().then(h => setHome(h)).catch(() => pushAlert('error', '目前沒有定位資料，無法設定起飛點'))
   }, [pushAlert])
@@ -95,5 +102,5 @@ export function useBridge() {
     }
   }, [pushAlert])
 
-  return { connected, telemetry, trail, home, stale, control, alerts, pushAlert, clearTrail, setHomeHere }
+  return { connected, telemetry, trail, home, stale, control, alerts, pushAlert, clearTrail, clearMap, setHomeHere }
 }

@@ -11,4 +11,4 @@
 .fr-detail ul { list-style: none; padding: 0; margin: 0; font-size: 0.85rem; color: var(--text-1); line-height: 1.8; }
 .fr-actions { display: flex; gap: 8px; }
 .fr-empty { color: var(--text-2); font-size: 0.85rem; }
-.fr-error { color: #ff6b6b; font-size: 0.85rem; }
+.fr-error { color: var(--bad); font-size: 0.85rem; }

@@ -108,7 +108,7 @@ body {
 /* Setting entries grid */
 .setting-entries {
   display: grid !important;
-  grid-template-columns: repeat(3, 1fr) !important;
+  grid-template-columns: repeat(2, 1fr) !important;
   grid-template-rows: repeat(2, 1fr) !important;
   gap: 12px !important;
   width: 100% !important;
@@ -118,17 +118,6 @@ body {
 }
 
 /* ── Close button ────────────────────────────────── */
-.close_btn_pic {
-  width: 28px;
-  height: 28px;
-  opacity: 0.6;
-  transition: opacity var(--transition);
-  filter: invert(1);
-}
-
-.close_btn_pic:hover {
-  opacity: 1;
-}
 
 /* ── Setting entry card ──────────────────────────── */
 button.setting-card {
@@ -189,37 +178,10 @@ button.setting-card h3 {
 
 /* ── Close / back button in modal ────────────────── */
 button.close-btn {
-  background: transparent !important;
-  border: none !important;
-  padding: 4px !important;
-  border-radius: var(--radius-sm) !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background var(--transition) !important;
+  background: transparent;
+  border-color: transparent;
 }
 
-button.close-btn:hover {
-  background: var(--surface-2) !important;
-}
-/* ── Boot / video fallback ───────────────────────── */
-.boot {
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-2);
-  font-size: 0.9rem;
-  letter-spacing: 0.08em;
-}
-
-.stream-fallback {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-2);
-  letter-spacing: 0.2em;
-  font-size: 0.9rem;
+button.close-btn:hover:not(:disabled) {
+  background: var(--surface-2);
 }

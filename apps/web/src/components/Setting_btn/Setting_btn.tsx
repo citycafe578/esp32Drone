@@ -14,7 +14,7 @@ const SettingBtn: FC<SettingBtnProps> = ({ onClick }) => {
   }
 
   return (
-    <button className={`setting-btn ${isOpen ? 'open' : ''}`} onClick={handleClick}>
+    <button className={`setting-btn btn-icon ${isOpen ? 'open' : ''}`} onClick={handleClick}>
       <img src="/gear.png" alt="設定" />
     </button>
   )

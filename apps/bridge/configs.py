@@ -32,7 +32,6 @@ DEFAULTS: dict[str, Any] = {
     'otherSettings': {
         'imageTransmission': '0',
         'reciver': '',
-        'transmissionPower': 'Low',
         'LAWSE': 'Sound Effect 1',
         'sharpen': '0',
         'grayscale': '0',

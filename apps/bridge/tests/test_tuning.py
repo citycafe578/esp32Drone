@@ -23,7 +23,11 @@ class FakeGround(BaseHTTPRequestHandler):
 
     def do_GET(self):
         FakeGround.seen.append(self.path)
-        body = TUNE_HTML.encode() if self.path == '/tune' else FakeGround.mpu_reply
+        if self.path == '/pid':
+            names = ['roll', 'pitch', 'yaw', 'rate_roll', 'rate_pitch']
+            body = ''.join(f'PID,{a},{n},0.5,0.25\n' for n, a in enumerate(names, 1)).encode()
+        else:
+            body = TUNE_HTML.encode() if self.path == '/tune' else FakeGround.mpu_reply
         self.send_response(200)
         self.end_headers()
         self.wfile.write(body)
@@ -49,7 +53,9 @@ def test_parse_table():
 
 
 def test_read_pid(link):
-    assert tuning.read_pid(link)['rate_roll']['p'] == 0.8
+    # 地面站有 /pid 時用飛機實際的值
+    t = tuning.read_pid(link)
+    assert t['roll'] == {'p': 1.0, 'i': 0.5, 'd': 0.25} and t['rate_pitch']['p'] == 5.0
 
 
 def test_set_pid_sends_firmware_query(link):

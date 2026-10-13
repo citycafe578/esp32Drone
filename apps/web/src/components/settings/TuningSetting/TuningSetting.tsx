@@ -17,12 +17,15 @@ type Msg = { ok: boolean; text: string } | null
 
 const errText = (e: unknown) => (e instanceof Error ? e.message.replace(/^\/[^:]*: /, '') : String(e))
 
-/** PID 調參與 MPU 校正：轉送到地面站既有的 HTTP 端點 (需 Wi‑Fi 連線模式)。 */
+/** PID 調參與 MPU 校正：經由地面站轉給飛機 (USB Serial 與 Wi‑Fi 都可以)。 */
 const TuningSetting: FC = () => {
   const [rows, setRows] = useState<Record<string, Row>>({})
   const [msg, setMsg] = useState<Msg>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [armed, setArmed] = useState(false)
+  const [droneAge, setDroneAge] = useState<number | null>(null)
+  const [calibrating, setCalibrating] = useState(false)
+  const [calibrated, setCalibrated] = useState<boolean | null>(null)
 
   const load = useCallback(() => {
     api.tuning()
@@ -36,9 +39,14 @@ const TuningSetting: FC = () => {
   useEffect(load, [load])
 
   useEffect(() => {
-    const poll = () => api.link().then(l => setArmed(l.armed)).catch(() => undefined)
+    const poll = () => api.link().then(l => {
+      setArmed(l.armed)
+      setDroneAge(l.link.drone_rx_age_ms ?? null)
+      setCalibrating(!!l.link.drone_calibrating)
+      setCalibrated(l.link.mpu_calibrated ?? null)
+    }).catch(() => undefined)
     poll()
-    const t = window.setInterval(poll, 2000)
+    const t = window.setInterval(poll, 1000)
     return () => window.clearInterval(t)
   }, [])
 
@@ -52,7 +60,7 @@ const TuningSetting: FC = () => {
     setBusy(axis)
     try {
       for (const [idx, p] of PARAMS.entries()) await api.setPid(axis, p, values[idx])
-      setMsg({ ok: true, text: `${label} 已送出。地面站已儲存並轉給飛機 (飛機不會回報確認)` })
+      setMsg({ ok: true, text: `${label} 已送出。地面站已儲存並轉給飛機；按「重新讀取」可以看飛機實際收到的值` })
     } catch (e) {
       setMsg({ ok: false, text: errText(e) })
     } finally {
@@ -102,9 +110,14 @@ const TuningSetting: FC = () => {
 
       <div className='tune-actions'>
         <button onClick={load} disabled={busy !== null}>重新讀取</button>
-        <button onClick={() => mpu('calibrate')} disabled={busy !== null || armed}>MPU 校正</button>
-        <button onClick={() => mpu('clear')} disabled={busy !== null || armed}>清除校正</button>
+        <button onClick={() => mpu('calibrate')} disabled={busy !== null || armed || calibrating}>MPU 校正</button>
+        <button onClick={() => mpu('clear')} disabled={busy !== null || armed || calibrating}>清除校正</button>
         {armed && <span className='tune-note'>已解鎖，無法校正</span>}
+        <span className='tune-note'>
+          {droneAge === null || droneAge > 1500
+            ? '飛機未回報'
+            : calibrating ? 'MPU：校正中，請保持飛機靜止…' : calibrated ? 'MPU：已校正' : 'MPU：尚未校正'}
+        </span>
       </div>
 
       {msg && <p className={`tune-msg ${msg.ok ? 'ok' : 'bad'}`}>{msg.text}</p>}

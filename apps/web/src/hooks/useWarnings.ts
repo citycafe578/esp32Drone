@@ -4,10 +4,12 @@ import type { Telemetry } from '../types'
 
 const sounds = import.meta.glob('../sounds/*.mp3', { eager: true, query: '?url', import: 'default' }) as Record<string, string>
 
-function playWarning(n: number): void {
+function playWarning(n: number, volume: number): void {
   const url = sounds[`../sounds/${n}.mp3`]
   if (!url) return
-  new Audio(url).play().catch(() => undefined) // 瀏覽器尚未有使用者互動時會被擋，忽略
+  const audio = new Audio(url)
+  audio.volume = Math.min(1, Math.max(0, volume))
+  audio.play().catch(() => undefined) // 瀏覽器尚未有使用者互動時會被擋，忽略
 }
 
 const cm = (v: string | undefined): number | null => {
@@ -48,7 +50,8 @@ export function useWarnings(telemetry: Telemetry | null, stale: boolean, armed: 
           if (Date.now() - lastSound.current > 5000) {
             lastSound.current = Date.now()
             const n = parseInt(String(other.LAWSE ?? '').replace(/\D/g, ''), 10) || 1
-            playWarning(n)
+            const vol = Number(other.sfxVolume ?? 100)
+            playWarning(n, (Number.isFinite(vol) ? vol : 100) / 100)
           }
         }
       }

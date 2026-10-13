@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FC, ReactNode } from 'react'
 import './index.css'
 import './App.css'
@@ -14,7 +14,6 @@ import SettingBtn from './components/Setting_btn/Setting_btn'
 import Hud from './components/Hud/Hud'
 import JoystickSetting from './components/settings/JoystickSetting/JoystickSetting'
 import DroneSetting from './components/settings/DroneSetting/DroneSetting'
-import FlightRecords from './components/settings/FlightRecords/FlightRecords'
 import TuningSetting from './components/settings/TuningSetting/TuningSetting'
 import OtherSetting from './components/settings/OtherSetting/OtherSetting'
 import { formatDistance } from './lib/geo'
@@ -53,8 +52,7 @@ interface SettingEntry {
 const SETTING_ENTRIES: SettingEntry[] = [
   { key: 'joystick', title: 'Joystick Settings', image: '/joystick.png' },
   { key: 'drone', title: 'Drone Settings', image: '/drone.png' },
-  { key: 'tuning', title: 'PID & Calibration', image: '/gear.png' },
-  { key: 'flight', title: 'Flight Records', image: '/folder.png' },
+  { key: 'tuning', title: 'PID & Calibration', image: '/tuning.svg' },
   { key: 'other', title: 'Other Settings', image: '/gear.png' },
 ]
 
@@ -103,10 +101,11 @@ const Dashboard: FC = () => {
     localStorage.setItem('theme', theme)
   }, [theme])
 
-  const { telemetry, stale, trail, home, setHomeHere } = bridge
+  const { telemetry, stale, trail, home, setHomeHere, clearMap } = bridge
+  const clearAllMapData = useCallback(() => { clearMap(); wp.clear() }, [clearMap, wp.clear])
   const mapProps = useMemo(
-    () => ({ telemetry, stale, trail, home, waypoints: wp.waypoints, onSetHome: setHomeHere }),
-    [telemetry, stale, trail, home, wp.waypoints, setHomeHere],
+    () => ({ telemetry, stale, trail, home, waypoints: wp.waypoints, onSetHome: setHomeHere, onClearAll: clearAllMapData }),
+    [telemetry, stale, trail, home, wp.waypoints, setHomeHere, clearAllMapData],
   )
 
   const renderSettingContent = (): ReactNode => {
@@ -114,7 +113,6 @@ const Dashboard: FC = () => {
       case 'joystick': return <JoystickSetting />
       case 'drone': return <DroneSetting />
       case 'tuning': return <TuningSetting />
-      case 'flight': return <FlightRecords />
       case 'other': return <OtherSetting theme={theme} setTheme={setTheme} />
       default:
         return (
@@ -172,8 +170,8 @@ const Dashboard: FC = () => {
             <div className='modal-header'>
               <h2>{settingPage === '' ? 'Settings' : SETTING_ENTRIES.find(e => e.key === settingPage)?.title || 'Settings'}</h2>
               {settingPage === ''
-                ? <button className='close-btn' onClick={() => setShowSetting(false)}><img src='/close.png' alt='關閉' className='close_btn_pic' /></button>
-                : <button className='close-btn' onClick={() => setSettingPage('')}><img src='/close.png' alt='返回' className='close_btn_pic' /></button>}
+                ? <button className='close-btn btn-icon' onClick={() => setShowSetting(false)}><img src='/close.png' alt='關閉' /></button>
+                : <button className='close-btn btn-icon' onClick={() => setSettingPage('')}><img src='/close.png' alt='返回' /></button>}
             </div>
             {renderSettingContent()}
           </div>

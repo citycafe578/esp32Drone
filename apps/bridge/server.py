@@ -222,6 +222,12 @@ def trail_clear():
     return jsonify({'status': 'ok'})
 
 
+@app.post('/map/clear')
+def map_clear():
+    hub.clear_map()
+    return jsonify({'status': 'ok'})
+
+
 @app.post('/sim')
 def sim_route():
     enabled = bool((request.get_json(silent=True) or {}).get('enabled', not simulator.running))

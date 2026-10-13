@@ -114,6 +114,12 @@ class TelemetryHub:
         with self._lock:
             self.trail.clear()
 
+    def clear_map(self) -> None:
+        """清除地圖資料：軌跡與起飛點 (下一筆定位會重新以當下位置為起飛點)。"""
+        with self._lock:
+            self.trail.clear()
+            self.home = None
+
     # ── 飛行紀錄 ──────────────────────────────────────────────────
     def _record(self, p: dict[str, Any]) -> None:
         if not self._rec:

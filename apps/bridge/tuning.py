@@ -3,11 +3,13 @@
 地面站韌體 (hardware/ground) 已經有這些 HTTP 端點，這裡只是轉送，不重複實作：
   Serial 模式則走序列幀：GET_PID / TUNE / CONTROL(cmd=3,4)，由地面站回 PID 文字行。
 
-  GET /tune                               目前 PID (寫在 HTML 表格裡，這裡解析出來)
+  GET /pid                                向飛機要實際 PID，回傳 PID,軸,p,i,d 文字行
+  GET /tune                               地面站快取的 PID (HTML 表格，舊韌體的退路)
   GET /update?axis=&param=&value=         修改單一參數；地面站會存檔並用 ESP-NOW 轉給飛機
   GET /mpu、/clearMpu                     校正 / 清除 MPU6050 (飛機必須在地上、未解鎖)
 
-注意：飛機沒有回報確認，「送出成功」只代表地面站收到。
+讀取 PID 時地面站會向飛機要實際的值 (飛機沒回應才用地面站快取)；MPU 校正與調參的「送出成功」只代表地面站收到，
+校正進度請看連線狀態的 drone_calibrating / mpu_calibrated。
 """
 from __future__ import annotations
 
@@ -64,7 +66,18 @@ def read_pid(link: Any) -> dict[str, dict[str, float]]:
         if len(table) < 5:
             raise TuningError('地面站沒有回傳 PID (請確認韌體已更新)')
         return table
-    table = parse_pid_table(_get(_wifi(link), '/tune'))
+    wifi = _wifi(link)
+    # /pid：地面站向飛機要實際的值 (沒回應的軸用地面站快取)；舊韌體沒有這個端點時退回解析 /tune 頁面
+    body = wifi.http_get('/pid', timeout=3.0)
+    if body is not None:
+        table = {}
+        for line in body.splitlines():
+            parsed = protocol.parse_pid_line(line)
+            if parsed:
+                table[parsed[0]] = parsed[1]
+        if len(table) == 5:
+            return table
+    table = parse_pid_table(_get(wifi, '/tune'))
     if not table:
         raise TuningError('無法解析地面站的 PID 頁面')
     return table

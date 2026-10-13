@@ -70,3 +70,21 @@ def test_request_pid_collects_five_axes():
     threading.Timer(0.1, feed).start()
     out = sl.request_pid(timeout=2)
     assert len(out) == 5 and out['roll'] == {'p': 1.0, 'i': 2.0, 'd': 3.0}
+
+
+def test_status_flags_and_wifi_shares_line_handling():
+    texts = []
+    w = link.WifiLink(texts.append, '127.0.0.1')
+    w.connected = True
+    w._handle_line('STATUS,1,120,1,0.5,-0.5,7.40,6')
+    w._handle_line('GEO,wsqqqxy1k,10,1,1,7.4,8')
+    st = w.status()
+    assert st['drone_armed'] is True and st['mpu_calibrated'] is True and st['drone_calibrating'] is True
+    assert texts == ['GEO,wsqqqxy1k,10,1,1,7.4,8']
+
+
+def test_status_without_drone_has_no_calibration_info():
+    sl, _ = make()
+    sl._handle_line('STATUS,0,-1,-1,0,0,0,7')
+    st = sl.status()
+    assert st['drone_rx_age_ms'] is None and st['mpu_calibrated'] is None and st['drone_calibrating'] is False

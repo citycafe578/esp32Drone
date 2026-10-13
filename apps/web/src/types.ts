@@ -30,6 +30,8 @@ export interface LinkStatus {
   roll?: number
   pitch?: number
   battery?: number
+  drone_calibrating?: boolean
+  mpu_calibrated?: boolean | null
 }
 
 export interface ControlState {
